@@ -197,12 +197,12 @@ class _PrimaryButton extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return SizedBox(
-      width: size.width * 0.90, // %90 ekran genişliği
+      width: size.width * 0.90,
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.symmetric(
-            vertical: size.height * 0.02, // ekran yüksekliğine göre
+            vertical: size.height * 0.02,
           ),
           backgroundColor: colorScheme.primary,
         ),

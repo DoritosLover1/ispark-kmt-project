@@ -55,6 +55,18 @@ class ThemeProvider extends ChangeNotifier {
       fontWeight: fontWeight,
     );
   }
+    static const List<String> availableFonts = [
+    'Inter',
+    'Roboto',
+    'Poppins',
+    'Montserrat',
+    'Lato',
+    'Open Sans',
+    'Raleway',
+    'Ubuntu',
+    'Nunito',
+    'Playfair Display',
+  ];
 
   ThemeData get themeData {
     TextTheme baseTextTheme;
