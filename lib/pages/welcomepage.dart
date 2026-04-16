@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ispark_project/pages/homepage.dart';
 
 class WelcomePage extends StatefulWidget {
-  const WelcomePage({super.key});
+  final String keyAPI;
+  const WelcomePage({super.key, required this.keyAPI});
 
   @override
   State<WelcomePage> createState() => _WelcomePageState();
@@ -92,7 +94,14 @@ class _WelcomePageState extends State<WelcomePage> {
 
                         _SecondaryButton(
                           text: "Giriş Yapmadan Devam Et",
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => HomePage(keyAPI: widget.keyAPI),
+                              ),
+                            );
+                          },
                         ),
 
                         const SizedBox(height: 20),

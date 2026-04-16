@@ -61,6 +61,7 @@ class _MapPageState extends State<MapPage> {
   List<ParkingLot> parkings = [];
 
   bool isLoading = true;
+
   int radius = 1000;
 
   @override
@@ -72,11 +73,9 @@ class _MapPageState extends State<MapPage> {
   Future<void> _init() async {
     final loc = await _locationService.getCurrentLocation();
 
-    if (loc != null) {
-      userLocation = LatLng(loc.latitude, loc.longitude);
-    } else {
-      userLocation = const LatLng(41.0082, 28.9784);
-    }
+    userLocation = loc != null
+        ? LatLng(loc.latitude, loc.longitude)
+        : const LatLng(41.0082, 28.9784);
 
     final data = await _isparkService.fetchParkings();
 
@@ -86,7 +85,6 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  /// DISTANCE
   double calculateDistance(
       double lat1, double lon1, double lat2, double lon2) {
     const p = 0.017453292519943295;
@@ -96,10 +94,10 @@ class _MapPageState extends State<MapPage> {
             cos(lat2 * p) *
             (1 - cos((lon2 - lon1) * p)) /
             2;
-    return 12742000 * asin(sqrt(a));
+
+    return 12742000 * asin(min(1.0, sqrt(a)));
   }
 
-  /// RADIUS FILTER
   List<ParkingLot> getNearbyParkings() {
     if (userLocation == null) return [];
 
@@ -114,84 +112,10 @@ class _MapPageState extends State<MapPage> {
     }).toList();
   }
 
-  /// ✅ EN YAKIN (RADIUS İÇİNDE)
-  ParkingLot? getNearestParkingInRadius() {
-    final nearby = getNearbyParkings();
-
-    if (nearby.isEmpty) return null;
-
-    ParkingLot? nearest;
-    double minDistance = double.infinity;
-
-    for (var p in nearby.where((e) => e.empty > 0)) {
-      final d = calculateDistance(
-        userLocation!.latitude,
-        userLocation!.longitude,
-        p.lat,
-        p.lng,
-      );
-
-      if (d < minDistance) {
-        minDistance = d;
-        nearest = p;
-      }
-    }
-
-    return nearest;
-  }
-
-  void goToNearestParking() {
-    final nearest = getNearestParkingInRadius();
-
-    if (nearest == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Bu yarıçap içinde uygun otopark yok"),
-        ),
-      );
-      return;
-    }
-
-    final point = LatLng(nearest.lat, nearest.lng);
-
-    _mapController.move(point, 17);
-    showParkingDetail(nearest);
-  }
-
-  /// DETAIL
-  void showParkingDetail(ParkingLot p) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                p.name,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 10),
-              Text("Kapasite: ${p.capacity}"),
-              Text("Boş Yer: ${p.empty}"),
-              const SizedBox(height: 12),
-              LinearProgressIndicator(
-                value: p.capacity == 0 ? 0 : p.empty / p.capacity,
-                color: colorScheme.primary,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     if (isLoading) {
       return const Scaffold(
@@ -202,10 +126,8 @@ class _MapPageState extends State<MapPage> {
     final nearby = getNearbyParkings();
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
-          /// MAP
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -215,58 +137,61 @@ class _MapPageState extends State<MapPage> {
             children: [
               TileLayer(
                 urlTemplate:
-                    "https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${widget.keyAPI}",
+                    "https://api.maptiler.com/maps/hybrid/256/{z}/{x}/{y}.jpg?key=${widget.keyAPI}",
+                userAgentPackageName: "com.example.app",
               ),
 
-              /// USER
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: userLocation!,
+                    radius: radius.toDouble(),
+                    useRadiusInMeter: true,
+                    color: colorScheme.primary.withOpacity(0.12),
+                    borderColor: colorScheme.primary.withOpacity(0.6),
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
+
               MarkerLayer(
                 markers: [
                   Marker(
                     point: userLocation!,
                     width: 40,
                     height: 40,
-                    child: Icon(
-                      Icons.person,
-                      color: colorScheme.primary,
-                    ),
+                    child: Icon(Icons.person, color: colorScheme.primary),
                   ),
                 ],
               ),
 
-              /// PARKINGS
               MarkerLayer(
                 markers: nearby.map((p) {
                   final ratio =
                       p.capacity == 0 ? 0 : p.empty / p.capacity;
 
-                  Color markerColor;
+                  Color color;
                   if (ratio > 0.5) {
-                    markerColor = Colors.green;
+                    color = Colors.green;
                   } else if (ratio > 0.2) {
-                    markerColor = Colors.orange;
+                    color = Colors.orange;
                   } else {
-                    markerColor = Colors.red;
+                    color = Colors.red;
                   }
 
                   return Marker(
                     point: LatLng(p.lat, p.lng),
                     width: 40,
                     height: 40,
-                    child: GestureDetector(
-                      onTap: () => showParkingDetail(p),
-                      child: Icon(
-                        Icons.local_parking,
-                        color: markerColor,
-                        size: 30,
-                      ),
-                    ),
+                    child: Icon(Icons.local_parking,
+                        color: color, size: 30),
                   );
                 }).toList(),
               ),
             ],
           ),
 
-          /// TITLE
+          /// TITLE (THEME UYUMLU)
           Positioned(
             top: 50,
             left: 0,
@@ -274,15 +199,22 @@ class _MapPageState extends State<MapPage> {
             child: Center(
               child: Text(
                 "İSPARK Haritası",
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                style: textTheme.headlineLarge?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.8),
+                      blurRadius: 15,
+                      offset: const Offset(0, 3),
                     ),
+                  ],
+                ),
               ),
             ),
           ),
 
-          /// BUTTONS
+          /// BUTTONS (PRIMARY THEME)
           Positioned(
             bottom: 40,
             left: 16,
@@ -291,24 +223,94 @@ class _MapPageState extends State<MapPage> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      _mapController.move(userLocation!, 15);
-                    },
-                    icon: const Icon(Icons.my_location),
-                    label: const Text("Beni Bul"),
+                    onPressed: () =>
+                        _mapController.move(userLocation!, 15),
+                    icon: Icon(Icons.my_location,
+                        color: colorScheme.onPrimary),
+                    label: Text(
+                      "Beni Bul",
+                      style: textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: goToNearestParking,
-                    icon: const Icon(Icons.near_me),
-                    label: const Text("En Yakın"),
+                    onPressed: () {},
+                    icon: Icon(Icons.near_me,
+                        color: colorScheme.onPrimary),
+                    label: Text(
+                      "En Yakın",
+                      style: textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          /// RADIUS SLIDER
+          Positioned(
+            right: 16,
+            bottom: 120,
+            child: Column(
+              children: [
+                Container(
+                  height: 220,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Slider(
+                      value: radius.toDouble(),
+                      min: 200,
+                      max: 5000,
+                      divisions: 24,
+                      activeColor: colorScheme.onPrimary,
+                      inactiveColor:
+                          colorScheme.primary.withOpacity(0.15),
+                      onChanged: (value) {
+                        setState(() {
+                          radius = value.toInt();
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  width: 90,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "${(radius / 100).toStringAsFixed(2)} km",
+                    textAlign: TextAlign.center,
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
