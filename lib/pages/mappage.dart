@@ -3,16 +3,22 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:ispark_project/functions/locationfunctions.dart';
+import 'package:ispark_project/pages/detailedparkpage.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 
-/// MODEL
 class ParkingLot {
   final String name;
   final double lat;
   final double lng;
   final int capacity;
   final int empty;
+  final int freeTime;
+  final String parkType;
+  final int isOpen;
+  final String workHours;
+  final String district;
+  final int parkID;
 
   ParkingLot({
     required this.name,
@@ -20,30 +26,44 @@ class ParkingLot {
     required this.lng,
     required this.capacity,
     required this.empty,
+    required this.freeTime,
+    required this.parkType,
+    required this.isOpen,
+    required this.workHours,
+    required this.district,
+    required this.parkID,
   });
+
+  factory ParkingLot.fromJson(Map<String, dynamic> e) {
+    return ParkingLot(
+      parkID: e["parkID"] ?? 0,
+      name: e["parkName"] ?? "Bilinmiyor",
+      lat: double.tryParse(e["lat"].toString()) ?? 0,
+      lng: double.tryParse(e["lng"].toString()) ?? 0,
+      capacity: e["capacity"] ?? 0,
+      empty: e["emptyCapacity"] ?? 0,
+      freeTime: e["freeTime"] ?? 0,
+      parkType: e["parkType"] ?? "-",
+      isOpen: e["isOpen"] ?? 0,
+      workHours: e["workHours"] ?? "-",
+      district: e["district"] ?? "-",
+    );
+  }
 }
 
-/// SERVICE
 class IsparkService {
   Future<List<ParkingLot>> fetchParkings() async {
     final response =
         await http.get(Uri.parse("https://api.ibb.gov.tr/ispark/Park"));
 
-    final data = json.decode(response.body);
+    final List data = json.decode(response.body);
 
-    return data.map<ParkingLot>((e) {
-      return ParkingLot(
-        name: e["PARK_NAME"] ?? "Bilinmiyor",
-        lat: double.tryParse(e["LAT"].toString()) ?? 0,
-        lng: double.tryParse(e["LON"].toString()) ?? 0,
-        capacity: int.tryParse(e["CAPACITY"].toString()) ?? 0,
-        empty: int.tryParse(e["EMPTY_CAPACITY"].toString()) ?? 0,
-      );
-    }).toList();
+    return data
+        .map<ParkingLot>((e) => ParkingLot.fromJson(e))
+        .toList();
   }
 }
 
-/// MAP PAGE
 class MapPage extends StatefulWidget {
   final String keyAPI;
   const MapPage({super.key, required this.keyAPI});
@@ -60,8 +80,9 @@ class _MapPageState extends State<MapPage> {
   LatLng? userLocation;
   List<ParkingLot> parkings = [];
 
-  bool isLoading = true;
+  List<ParkingLot> top3Parkings = [];
 
+  bool isLoading = true;
   int radius = 1000;
 
   @override
@@ -112,6 +133,27 @@ class _MapPageState extends State<MapPage> {
     }).toList();
   }
 
+  List<ParkingLot> getTop3Parkings() {
+    final candidates = getNearbyParkings();
+
+    candidates.sort((a, b) {
+      double distA = calculateDistance(
+          userLocation!.latitude, userLocation!.longitude, a.lat, a.lng);
+      double distB = calculateDistance(
+          userLocation!.latitude, userLocation!.longitude, b.lat, b.lng);
+
+      double ratioA = a.capacity == 0 ? 0 : a.empty / a.capacity;
+      double ratioB = b.capacity == 0 ? 0 : b.empty / b.capacity;
+
+      double scoreA = distA - (ratioA * 1000);
+      double scoreB = distB - (ratioB * 1000);
+
+      return scoreA.compareTo(scoreB);
+    });
+
+    return candidates.take(3).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -122,8 +164,6 @@ class _MapPageState extends State<MapPage> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final nearby = getNearbyParkings();
 
     return Scaffold(
       body: Stack(
@@ -165,33 +205,17 @@ class _MapPageState extends State<MapPage> {
                 ],
               ),
 
-              MarkerLayer(
-                markers: nearby.map((p) {
-                  final ratio =
-                      p.capacity == 0 ? 0 : p.empty / p.capacity;
-
-                  Color color;
-                  if (ratio > 0.5) {
-                    color = Colors.green;
-                  } else if (ratio > 0.2) {
-                    color = Colors.orange;
-                  } else {
-                    color = Colors.red;
-                  }
-
-                  return Marker(
-                    point: LatLng(p.lat, p.lng),
-                    width: 40,
-                    height: 40,
-                    child: Icon(Icons.local_parking,
-                        color: color, size: 30),
-                  );
-                }).toList(),
-              ),
+              if (top3Parkings.isNotEmpty)
+                MarkerLayer(
+                  markers: ParkingMarkers.getParkingMarkers(
+                    top3Parkings,
+                    (_) {}, // onTap callback
+                    context,
+                  ),
+                ),
             ],
           ),
 
-          /// TITLE (THEME UYUMLU)
           Positioned(
             top: 50,
             left: 0,
@@ -214,7 +238,6 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
 
-          /// BUTTONS (PRIMARY THEME)
           Positioned(
             bottom: 40,
             left: 16,
@@ -243,7 +266,20 @@ class _MapPageState extends State<MapPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      final results = getTop3Parkings();
+
+                      setState(() {
+                        top3Parkings = results;
+                      });
+
+                      if (results.isNotEmpty) {
+                        _mapController.move(
+                          LatLng(results.first.lat, results.first.lng),
+                          16,
+                        );
+                      }
+                    },
                     icon: Icon(Icons.near_me,
                         color: colorScheme.onPrimary),
                     label: Text(
@@ -263,7 +299,8 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
 
-          /// RADIUS SLIDER
+
+
           Positioned(
             right: 16,
             bottom: 120,
@@ -289,6 +326,7 @@ class _MapPageState extends State<MapPage> {
                       onChanged: (value) {
                         setState(() {
                           radius = value.toInt();
+                          top3Parkings = [];
                         });
                       },
                     ),
@@ -320,5 +358,130 @@ class _MapPageState extends State<MapPage> {
         ],
       ),
     );
+  }
+}
+
+class ParkingMarkers {
+  static List<Marker> getParkingMarkers(
+    List<dynamic> items,
+    void Function(dynamic p) onTap,
+    BuildContext context,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final scale = (screenWidth / 375.0).clamp(0.85, 1.3);
+
+    return items.map((p) {
+      final ratio = p.capacity == 0 ? 0 : p.empty / p.capacity;
+
+      Color accent;
+      if (ratio > 0.5) {
+        accent = Colors.green;
+      } else if (ratio > 0.2) {
+        accent = Colors.orange;
+      } else {
+        accent = Colors.red;
+      }
+
+      return Marker(
+        width: 170 * scale,
+        height: 75 * scale,
+        point: LatLng(p.lat, p.lng),
+
+        child: GestureDetector(
+          onTap: () {
+            onTap(p);
+
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DetailedParkPage(
+                  park: {
+                    "parkID": p.parkID,
+                    "parkName": p.name,
+                    "capacity": p.capacity,
+                    "emptyCapacity": p.empty,
+                    "lat": p.lat,
+                    "lng": p.lng,
+                    "district": p.district,
+                    "parkType": p.parkType,
+                    "workHours": p.workHours,
+                    "freeTime": p.freeTime,
+                    "isOpen": p.isOpen,
+                  },
+                ),
+              ),
+            );
+          },
+
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14 * scale,
+                  vertical: 8 * scale,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(30 * scale),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withOpacity(0.25),
+                      blurRadius: 18 * scale,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: accent.withOpacity(0.6),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 10 * scale,
+                      height: 10 * scale,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 8 * scale),
+                    Flexible(
+                      child: Text(
+                        p.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontSize: 12 * scale,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 2,
+                height: 10 * scale,
+                color: accent.withOpacity(0.6),
+              ),
+              Container(
+                width: 8 * scale,
+                height: 8 * scale,
+                decoration: BoxDecoration(
+                  color: accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
   }
 }

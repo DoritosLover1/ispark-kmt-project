@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
               break;
-
+            
             case 2:
               themeProvider.navigatorKey.currentState!.pushReplacement(
                 MaterialPageRoute(
