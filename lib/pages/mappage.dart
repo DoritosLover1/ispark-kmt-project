@@ -79,8 +79,8 @@ class _MapPageState extends State<MapPage> {
 
   LatLng? userLocation;
   List<ParkingLot> parkings = [];
-
-  List<ParkingLot> top3Parkings = [];
+  List<ParkingLot> displayedParkings = [];
+  bool showAllParks = true;
 
   bool isLoading = true;
   int radius = 1000;
@@ -102,6 +102,7 @@ class _MapPageState extends State<MapPage> {
 
     setState(() {
       parkings = data;
+      displayedParkings = data;
       isLoading = false;
     });
   }
@@ -133,7 +134,7 @@ class _MapPageState extends State<MapPage> {
     }).toList();
   }
 
-  List<ParkingLot> getTop3Parkings() {
+  List<ParkingLot> getTop5NearestParkings() {
     final candidates = getNearbyParkings();
 
     candidates.sort((a, b) {
@@ -151,7 +152,7 @@ class _MapPageState extends State<MapPage> {
       return scoreA.compareTo(scoreB);
     });
 
-    return candidates.take(3).toList();
+    return candidates.take(5).toList();
   }
 
   @override
@@ -181,18 +182,28 @@ class _MapPageState extends State<MapPage> {
                 userAgentPackageName: "com.example.app",
               ),
 
-              CircleLayer(
-                circles: [
-                  CircleMarker(
-                    point: userLocation!,
-                    radius: radius.toDouble(),
-                    useRadiusInMeter: true,
-                    color: colorScheme.primary.withOpacity(0.12),
-                    borderColor: colorScheme.primary.withOpacity(0.6),
-                    borderStrokeWidth: 2,
+              if (!showAllParks)
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: userLocation!,
+                      radius: radius.toDouble(),
+                      useRadiusInMeter: true,
+                      color: colorScheme.primary.withOpacity(0.12),
+                      borderColor: colorScheme.primary.withOpacity(0.6),
+                      borderStrokeWidth: 2,
+                    ),
+                  ],
+                ),
+
+              if (displayedParkings.isNotEmpty)
+                MarkerLayer(
+                  markers: ParkingMarkers.getParkingMarkers(
+                    displayedParkings,
+                    (_) {},
+                    context,
                   ),
-                ],
-              ),
+                ),
 
               MarkerLayer(
                 markers: [
@@ -204,15 +215,6 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ],
               ),
-
-              if (top3Parkings.isNotEmpty)
-                MarkerLayer(
-                  markers: ParkingMarkers.getParkingMarkers(
-                    top3Parkings,
-                    (_) {}, // onTap callback
-                    context,
-                  ),
-                ),
             ],
           ),
 
@@ -240,8 +242,8 @@ class _MapPageState extends State<MapPage> {
 
           Positioned(
             bottom: 40,
-            left: 16,
-            right: 16,
+            left: 10,
+            right: 10,
             child: Row(
               children: [
                 Expanded(
@@ -263,14 +265,40 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      final results = getTop3Parkings();
+                      setState(() {
+                        showAllParks = true;
+                        displayedParkings = parkings;
+                      });
+                      _mapController.move(userLocation!, 15);
+                    },
+                    icon: Icon(Icons.list,
+                        color: colorScheme.onPrimary),
+                    label: Text(
+                      "Tam Harita",
+                      style: textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final results = getTop5NearestParkings();
 
                       setState(() {
-                        top3Parkings = results;
+                        showAllParks = false;
+                        displayedParkings = results;
                       });
 
                       if (results.isNotEmpty) {
@@ -299,62 +327,61 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
 
-
-
-          Positioned(
-            right: 16,
-            bottom: 120,
-            child: Column(
-              children: [
-                Container(
-                  height: 220,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: RotatedBox(
-                    quarterTurns: 3,
-                    child: Slider(
-                      value: radius.toDouble(),
-                      min: 200,
-                      max: 5000,
-                      divisions: 24,
-                      activeColor: colorScheme.onPrimary,
-                      inactiveColor:
-                          colorScheme.primary.withOpacity(0.15),
-                      onChanged: (value) {
-                        setState(() {
-                          radius = value.toInt();
-                          top3Parkings = [];
-                        });
-                      },
+          if (!showAllParks)
+            Positioned(
+              right: 16,
+              bottom: 120,
+              child: Column(
+                children: [
+                  Container(
+                    height: 220,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: Slider(
+                        value: radius.toDouble(),
+                        min: 200,
+                        max: 5000,
+                        divisions: 24,
+                        activeColor: colorScheme.onPrimary,
+                        inactiveColor:
+                            colorScheme.primary.withOpacity(0.15),
+                        onChanged: (value) {
+                          setState(() {
+                            radius = value.toInt();
+                            displayedParkings = getTop5NearestParkings();
+                          });
+                        },
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                Container(
-                  width: 90,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    "${(radius / 100).toStringAsFixed(2)} km",
-                    textAlign: TextAlign.center,
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 90,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      "${(radius / 100).toStringAsFixed(2)} km",
+                      textAlign: TextAlign.center,
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
