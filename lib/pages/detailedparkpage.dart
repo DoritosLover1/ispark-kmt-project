@@ -13,6 +13,38 @@ class DetailedParkPage extends StatefulWidget {
 class _DetailedParkPageState extends State<DetailedParkPage> {
   static const primaryColor = Color(0xFF0056D2);
 
+  bool _isFavorite = false;
+  bool _isFavoriteBusy = false;
+
+  void _toggleFavorite() async {
+    if (_isFavoriteBusy) return;
+
+    setState(() {
+      _isFavoriteBusy = true;
+    });
+
+    final newState = !_isFavorite;
+
+    setState(() {
+      _isFavorite = newState;
+    });
+
+    try {
+      // TODO: DB / Firebase / Local storage entegrasyonu yapılacak
+      // örnek:
+      // await FavoritesService.togglePark(widget.park["parkID"]);
+
+    } catch (e) {
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+    } finally {
+      setState(() {
+        _isFavoriteBusy = false;
+      });
+    }
+  }
+
   BoxDecoration _cardDecoration(Color primaryColor) {
     return BoxDecoration(
       color: Colors.white,
@@ -155,6 +187,24 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
           ),
         ),
         centerTitle: true,
+
+        actions: [
+          AnimatedScale(
+            scale: _isFavorite ? 1.2 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            child: IconButton(
+              onPressed: _isFavoriteBusy ? null : _toggleFavorite,
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  key: ValueKey(_isFavorite),
+                  color: _isFavorite ? Colors.red : Colors.grey,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
 
       body: SingleChildScrollView(
