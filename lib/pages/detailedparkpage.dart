@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:ispark_project/extras/parkingmarkers.dart';
 import 'package:ispark_project/pages/mapswebviewpage.dart';
+import 'package:latlong2/latlong.dart';
 
 class DetailedParkPage extends StatefulWidget {
   final Map<String, dynamic> park;
+  final String keyAPI = dotenv.env['MAPTILER_MAPS_API_KEY'] ?? '';
 
-  const DetailedParkPage({super.key, required this.park});
+  DetailedParkPage({super.key, required this.park});
 
   @override
   State<DetailedParkPage> createState() => _DetailedParkPageState();
@@ -15,6 +20,27 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
 
   bool _isFavorite = false;
   bool _isFavoriteBusy = false;
+
+  // Plaka ve Telefon Controllers
+  late TextEditingController _plateController;
+  late TextEditingController _phoneController;
+  String? _plateError;
+  String? _phoneError;
+  bool _isCreatingReservation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _plateController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _plateController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   void _toggleFavorite() async {
     if (_isFavoriteBusy) return;
@@ -149,6 +175,103 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     );
   }
 
+  void _validatePlate() {
+    final plate = _plateController.text.trim().toUpperCase();
+
+    if (plate.isEmpty) {
+      setState(() {
+        _plateError = 'Plaka boş olamaz';
+      });
+      return;
+    }
+    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$').hasMatch(plate)) {
+      setState(() {
+        _plateError = 'Geçerli bir plaka girin (ör: 34ABC1234)';
+      });
+      return;
+    }
+
+    setState(() {
+      _plateError = null;
+    });
+  }
+
+  void _validatePhone() {
+    final phone = _phoneController.text.trim();
+
+    if (phone.isEmpty) {
+      setState(() {
+        _phoneError = 'Telefon numarası boş olamaz';
+      });
+      return;
+    }
+
+    if (!RegExp(r'^05\d{9}$').hasMatch(phone)) {
+      setState(() {
+        _phoneError = 'Geçerli bir telefon numarası girin (05XXXXXXXXX)';
+      });
+      return;
+    }
+
+    setState(() {
+      _phoneError = null;
+    });
+  }
+
+  void _createReservation() async {
+    _validatePlate();
+    _validatePhone();
+
+    if (_plateError != null || _phoneError != null) {
+      return;
+    }
+
+    setState(() {
+      _isCreatingReservation = true;
+    });
+
+    try {
+      final plate = _plateController.text.trim().toUpperCase();
+      final phone = _phoneController.text.trim();
+      final parkID = widget.park["parkID"] ?? 0;
+      final parkName = widget.park["parkName"] ?? "Otopark";
+
+      // TODO: API çağrısı veya DB işlemi yapılacak
+      print('Randevu Oluşturuluyor:');
+      print('- Park: $parkName (ID: $parkID)');
+      print('- Plaka: $plate');
+      print('- Telefon: $phone');
+
+      // Başarı mesajı
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Randevu başarıyla oluşturuldu! Plaka: $plate'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Formu temizle
+        _plateController.clear();
+        _phoneController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isCreatingReservation = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -156,6 +279,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     final colorScheme = theme.colorScheme;
 
     final park = widget.park;
+    final parkLoc = LatLng(park["lat"], park["lng"]);
 
     final int capacity =
         int.tryParse(park["capacity"].toString()) ?? 0;
@@ -176,8 +300,10 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
       backgroundColor: colorScheme.surface,
 
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: primaryColor),
         title: Text(
           "Otopark Detayı",
@@ -298,29 +424,177 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: _cardDecoration(primaryColor),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openMapViewer(context),
-                  icon: const Icon(Icons.map, color: Colors.white),
-                  label: Text(
-                    "Haritada Göster",
-                    style: textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              child: Column(
+                spacing: 10,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    clipBehavior: Clip.hardEdge, // 🔥 köşeleri gerçekten keser
+                    child: FlutterMap(
+                      options: MapOptions(
+                        interactionOptions: InteractionOptions(
+                          flags: InteractiveFlag.none
+                        ),
+                        initialCenter: parkLoc,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              "https://api.maptiler.com/maps/hybrid/256/{z}/{x}/{y}.jpg?key=${widget.keyAPI}",
+                          userAgentPackageName: "com.example.app",
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            ParkingMarkers.getSingleParkingMarker(park, context)
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _openMapViewer(context),
+                      icon: const Icon(Icons.map, color: Colors.white),
+                      label: Text(
+                        "Yol Tarifi Al",
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 8,
+                      ),
                     ),
-                    elevation: 8,
                   ),
-                ),
+                ],
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: _cardDecoration(primaryColor),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _plateController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: 'Araç Plakası',
+                      hintText: '34ABC1234',
+                      prefixIcon: const Icon(Icons.directions_car),
+                      errorText: _plateError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: primaryColor,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_plateError != null) {
+                        setState(() => _plateError = null);
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Telefon Numarası',
+                      hintText: '5xxxxxxxxxx',
+                      prefixIcon: const Icon(Icons.phone),
+                      errorText: _phoneError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: primaryColor,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_phoneError != null) {
+                        setState(() => _phoneError = null);
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isCreatingReservation
+                          ? null
+                          : _createReservation,
+                      icon: _isCreatingReservation
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.calendar_today),
+                      label: Text(
+                        _isCreatingReservation
+                            ? 'Oluşturuluyor...'
+                            : 'Randevu Oluştur',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 8,
+                        disabledBackgroundColor:
+                            primaryColor.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

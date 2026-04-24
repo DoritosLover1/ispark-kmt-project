@@ -8,7 +8,7 @@ class DBInstance {
   static Future<AppDataBase> getInstance() async {
     if (_db != null) return _db!;
 
-    _db = await $FloorAppDatabase.databaseBuilder('ispark.db').build();
+    _db = await $FloorAppDataBase.databaseBuilder('ispark.db').build();
 
     return _db!;
   }

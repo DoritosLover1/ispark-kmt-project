@@ -1,5 +1,6 @@
 
 
+import 'dart:async';
 import 'package:floor/floor.dart';
 import 'package:ispark_project/database/dao/favoritedao.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
@@ -16,6 +17,8 @@ import 'package:sqflite/sqflite.dart' as sqflite;
     flutter pub run build_runner build --delete-conflicting-outputs
   part 'maindb.g.dart'; yapılacak
 */
+part 'maindb.g.dart';
+
 @Database(version: 1, entities: [Favorite])
 abstract class AppDataBase extends FloorDatabase {
   Favoritedao get favoritesDao;
