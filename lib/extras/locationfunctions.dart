@@ -1,10 +1,12 @@
 
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:ispark_project/localentity/parkinglot.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:latlong2/latlong.dart';
+import 'dart:math';
 
-class LocationService {
+class Localfunctions {
   StreamSubscription<Position>? _streamSubscription;
 
   Future<bool> _checkPermissions() async {
@@ -152,5 +154,55 @@ class LocationService {
   void dispose() {
     _streamSubscription?.cancel();
     _streamSubscription = null;
+  }
+
+  double calculateDistance(
+      double lat1, double lon1, double lat2, double lon2) {
+    const p = 0.017453292519943295;
+    final a = 0.5 -
+        (cos((lat2 - lat1) * p)) / 2 +
+        cos(lat1 * p) *
+            cos(lat2 * p) *
+            (1 - cos((lon2 - lon1) * p)) /
+            2;
+
+    return 12742000 * asin(min(1.0, sqrt(a)));
+  }
+
+  List<ParkingLot> getNearbyParkings(
+      LatLng userLocation, List<ParkingLot> parkings, double radius) {
+    if (userLocation == null) return [];
+
+    return parkings.where((p) {
+      final d = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        p.lat,
+        p.lng,
+      );
+      return d <= radius;
+    }).toList();
+  }
+
+  List<ParkingLot> getTop5NearestParkings(
+      LatLng userLocation, List<ParkingLot> parkings, double radius) {
+    final candidates = getNearbyParkings(userLocation, parkings, radius);
+
+    candidates.sort((a, b) {
+      double distA = calculateDistance(
+          userLocation.latitude, userLocation.longitude, a.lat, a.lng);
+      double distB = calculateDistance(
+          userLocation.latitude, userLocation.longitude, b.lat, b.lng);
+
+      double ratioA = a.capacity == 0 ? 0 : a.empty / a.capacity;
+      double ratioB = b.capacity == 0 ? 0 : b.empty / b.capacity;
+
+      double scoreA = distA - (ratioA * 1000);
+      double scoreB = distB - (ratioB * 1000);
+
+      return scoreA.compareTo(scoreB);
+    });
+
+    return candidates.take(5).toList();
   }
 }
