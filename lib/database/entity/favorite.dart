@@ -11,6 +11,8 @@ class Favorite {
   final String workHours;
   final int capacity;
   final int freeTime;
+  final double lat;
+  final double lng;
 
   Favorite({
     required this.id,
@@ -20,7 +22,9 @@ class Favorite {
     required this.parkType,
     required this.workHours,
     required this.capacity,
-    required this.freeTime
+    required this.freeTime,
+    required this.lat,
+    required this.lng
   });
 
   factory Favorite.fromJson(Map<String, dynamic> json) {
@@ -32,7 +36,9 @@ class Favorite {
       parkType: json['parkType'] as String, 
       workHours: json['workHours'] as String, 
       capacity: (json['capacity'] as num).toInt(), 
-      freeTime: (json['freeTime'] as num).toInt()
+      freeTime: (json['freeTime'] as num).toInt(),
+      lat: double.parse(json['lat'].toString()),
+      lng: double.parse(json['lng'].toString()),
     );
   }
 }

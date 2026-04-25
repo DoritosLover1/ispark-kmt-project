@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
+import 'package:ispark_project/pages/detailedparkpage.dart';
 
 class FavoriteParksPage extends StatefulWidget {
   const FavoriteParksPage({super.key});
@@ -98,7 +99,11 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${park.parkName} favorilerden çıkarıldı ✅'),
+          content: Text('${park.parkName} favorilerden çıkarıldı ✅',
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold
+          ),),
           backgroundColor: primaryColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -156,9 +161,11 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
               foregroundColor: Colors.grey[700],
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text(
+            child: Text(
               'İptal',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                fontWeight: FontWeight.bold
+              ),
             ),
           ),
           ElevatedButton(
@@ -172,9 +179,12 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
               ),
               elevation: 2,
             ),
-            child: const Text(
+            child: Text(
               'Sil',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold
+              ),
             ),
           ),
         ],
@@ -471,7 +481,11 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                    '${park.parkName} seçildi'),
+                                                    '${park.parkName} seçildi',
+                                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),),
                                                 backgroundColor: primaryColor,
                                                 behavior:
                                                     SnackBarBehavior.floating,
@@ -479,6 +493,27 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           12),
+                                                ),
+                                              ),
+                                            );
+
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => DetailedParkPage(
+                                                  park: {
+                                                    'parkID': park.parkID,
+                                                    'parkName': park.parkName,
+                                                    'district': park.district,
+                                                    'parkType': park.parkType,
+                                                    'workHours': park.workHours,
+                                                    'capacity': park.capacity,
+                                                    'emptyCapacity': park.freeTime,
+                                                    'freeTime': park.freeTime,
+                                                    'lat': park.lat as double,
+                                                    'lng': park.lng as double,
+                                                    'isOpen': 1,
+                                                  },
                                                 ),
                                               ),
                                             );
@@ -494,10 +529,11 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                                   BorderRadius.circular(12),
                                             ),
                                           ),
-                                          child: const Text(
+                                          child: Text(
                                             'Detaylar',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:ispark_project/extras/parkingmarkers.dart';
-import 'package:ispark_project/pages/mapswebviewpage.dart';
 import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart'; 
 
 class DetailedParkPage extends StatefulWidget {
   final Map<String, dynamic> park;
@@ -85,29 +85,53 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
           workHours: widget.park["workHours"] ?? "",
           capacity: int.tryParse(widget.park["capacity"].toString()) ?? 0,
           freeTime: int.tryParse(widget.park["freeTime"].toString()) ?? 0,
+          lat: widget.park['lat'],
+          lng: widget.park['lng']
         );
 
         await db.favoritesDao.insertFavorite(favorite);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$parkName favorilere eklendi ❤️'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+            ScaffoldMessenger.of(context)
+              .showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '${parkName} favorilere eklendi.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),),
+                  backgroundColor: primaryColor,
+                  behavior:
+                    SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                      BorderRadius.circular(12),
+                  ),
+                ),
+              );
         }
       } else {
         await db.favoritesDao.deleteFavoriteByParkID(parkID);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$parkName favorilerden çıkarıldı'),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 2),
-            ),
+            ScaffoldMessenger.of(context)
+              .showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '${parkName} favorilerden çıkarıldı.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),),
+                  backgroundColor: primaryColor,
+                  behavior:
+                    SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                      BorderRadius.circular(12),
+                  ),
+                ),
           );
         }
       }
@@ -165,7 +189,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
         double.tryParse(widget.park["lat"].toString()) ?? 0;
     final double lng =
         double.tryParse(widget.park["lng"].toString()) ?? 0;
-
+ 
     if (lat == 0 || lng == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Konum bilgisi hatalı")),
@@ -173,18 +197,37 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MapsWebViewPage(
-          lat: lat,
-          lng: lng,
-          name: widget.park["parkName"] ?? "Otopark",
-        ),
-      ),
-    );
+    _openGoogleMaps(context, lat, lng);
   }
+ 
+  Future<void> _openGoogleMaps(BuildContext context, double lat, double lng) async {
+    final String googleMapsAppUrl = 'google.navigation:q=$lat,$lng&z=16';
 
+    final String googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+ 
+    try {
+      if (await canLaunchUrl(Uri.parse(googleMapsAppUrl))) {
+        await launchUrl(Uri.parse(googleMapsAppUrl));
+      } else if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
+        await launchUrl(Uri.parse(googleMapsUrl));
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Maps açılamadı")),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Hata: $e")),
+        );
+      }
+    }
+  }
+ 
+
+  
   Widget _statusBadge(int isOpen, TextTheme textTheme) {
     final bool open = isOpen == 1;
 

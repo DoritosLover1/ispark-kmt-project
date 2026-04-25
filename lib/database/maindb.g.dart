@@ -80,7 +80,7 @@ class _$AppDataBase extends AppDataBase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 3,
+      version: 6,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -96,7 +96,7 @@ class _$AppDataBase extends AppDataBase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `favorites` (`id` INTEGER NOT NULL, `parkID` INTEGER NOT NULL, `parkName` TEXT NOT NULL, `district` TEXT NOT NULL, `parkType` TEXT NOT NULL, `workHours` TEXT NOT NULL, `capacity` INTEGER NOT NULL, `freeTime` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `favorites` (`id` INTEGER NOT NULL, `parkID` INTEGER NOT NULL, `parkName` TEXT NOT NULL, `district` TEXT NOT NULL, `parkType` TEXT NOT NULL, `workHours` TEXT NOT NULL, `capacity` INTEGER NOT NULL, `freeTime` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -126,7 +126,9 @@ class _$Favoritedao extends Favoritedao {
                   'parkType': item.parkType,
                   'workHours': item.workHours,
                   'capacity': item.capacity,
-                  'freeTime': item.freeTime
+                  'freeTime': item.freeTime,
+                  'lat': item.lat,
+                  'lng': item.lng
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -148,7 +150,9 @@ class _$Favoritedao extends Favoritedao {
             parkType: row['parkType'] as String,
             workHours: row['workHours'] as String,
             capacity: row['capacity'] as int,
-            freeTime: row['freeTime'] as int));
+            freeTime: row['freeTime'] as int,
+            lat: row['lat'] as double,
+            lng: row['lng'] as double));
   }
 
   @override
@@ -162,7 +166,9 @@ class _$Favoritedao extends Favoritedao {
             parkType: row['parkType'] as String,
             workHours: row['workHours'] as String,
             capacity: row['capacity'] as int,
-            freeTime: row['freeTime'] as int),
+            freeTime: row['freeTime'] as int,
+            lat: row['lat'] as double,
+            lng: row['lng'] as double),
         arguments: [id]);
   }
 
