@@ -40,7 +40,10 @@ class SettingsPage extends StatelessWidget {
         elevation: 0,
         title: Text(
           "Font Ayarları",
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),

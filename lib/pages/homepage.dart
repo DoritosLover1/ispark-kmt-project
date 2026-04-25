@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
 
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.secondary,
-        backgroundColor: colorScheme.surface,
+        backgroundColor: colorScheme.onPrimary,
 
         elevation: 8,
 

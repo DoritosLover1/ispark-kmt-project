@@ -200,7 +200,10 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
         elevation: 0,
         title: Text(
           'Favori Otoparklar',
-          style: theme.textTheme.headlineMedium,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -217,7 +220,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            CupertinoIcons.car_detailed,
+                            Icons.local_parking_rounded,
                             size: MediaQuery.of(context).size.height * 0.12,
                             color: Colors.grey[400],
                           ),
@@ -316,7 +319,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // Kapasiteler
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
@@ -414,7 +416,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // İlerleme Çubuğu
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -461,7 +462,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // Aksiyon Butonları
                                   Row(
                                     children: [
                                       Expanded(
