@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:ispark_project/database/databaseinstance.dart';
+import 'package:ispark_project/database/entity/favorite.dart';
 
 class FavoriteParksPage extends StatefulWidget {
   const FavoriteParksPage({super.key});
@@ -11,32 +13,53 @@ class FavoriteParksPage extends StatefulWidget {
 class _FavoriteParksPageState extends State<FavoriteParksPage> {
   static const primaryColor = Color(0xFF0056D2);
 
-  // 🔥 MOCK DATA
-  List<Map<String, dynamic>> _favoriteParksList = [
-    {
-      "id": "park_1",
-      "name": "İSPARK Kadıköy",
-      "capacity": 120,
-      "empty": 35,
-      "district": "Kadıköy"
-    },
-    {
-      "id": "park_2",
-      "name": "İSPARK Beşiktaş",
-      "capacity": 200,
-      "empty": 50,
-      "district": "Beşiktaş"
-    },
-    {
-      "id": "park_3",
-      "name": "İSPARK Şişli",
-      "capacity": 150,
-      "empty": 20,
-      "district": "Şişli"
-    },
-  ];
-
+  List<Favorite> _favoriteParksList = [];
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final db = await DBInstance.getInstance();
+      final favorites = await db.favoritesDao.getAllFavorites();
+
+      if (mounted) {
+        setState(() {
+          _favoriteParksList = favorites;
+        });
+      }
+    } catch (e) {
+      print('Favorileri yüklerken hata: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Favorileri yüklerken hata oluştu: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   BoxDecoration _blueDecoration() {
     return BoxDecoration(
@@ -57,7 +80,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
     );
   }
 
-  Future<void> _removePark(Map<String, dynamic> park) async {
+  Future<void> _removePark(Favorite park) async {
     if (_isLoading) return;
 
     try {
@@ -65,16 +88,17 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
         _isLoading = true;
       });
 
-      await Future.delayed(const Duration(milliseconds: 300));
+      final db = await DBInstance.getInstance();
+      await db.favoritesDao.deleteFavorite(park.id);
 
       if (!mounted) return;
       setState(() {
-        _favoriteParksList.removeWhere((p) => p["id"] == park["id"]);
+        _favoriteParksList.removeWhere((p) => p.id == park.id);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Favori otopark silindi ✅'),
+          content: Text('${park.parkName} favorilerden çıkarıldı ✅'),
           backgroundColor: primaryColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -104,7 +128,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
     }
   }
 
-  Future<void> _confirmDelete(Map<String, dynamic> park) async {
+  Future<void> _confirmDelete(Favorite park) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -120,7 +144,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
               ),
         ),
         content: Text(
-          'Bu otoparkı favorilerinden kaldırmak istediğine emin misin?',
+          '${park.parkName} otoparkını favorilerinden kaldırmak istediğine emin misin?',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: Colors.grey[700],
               ),
@@ -185,9 +209,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
           if (_isLoading) const LinearProgressIndicator(color: primaryColor),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async {
-                await Future.delayed(const Duration(milliseconds: 500));
-              },
+              onRefresh: _loadFavorites,
               color: primaryColor,
               child: _favoriteParksList.isEmpty
                   ? Center(
@@ -207,6 +229,13 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                               color: Colors.grey[600],
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Bir otopark detayına gidin ve kalp ikonuna tıklayın',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -217,11 +246,13 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                           _favoriteParksList.length,
                           (index) {
                             final park = _favoriteParksList[index];
-                            final occupancyPercentage = ((park["capacity"] -
-                                        park["empty"]) /
-                                    park["capacity"] *
-                                    100)
-                                .toStringAsFixed(0);
+                            final occupancyPercentage =
+                                park.capacity == 0
+                                    ? 0
+                                    : (((park.capacity - park.freeTime) /
+                                            park.capacity) *
+                                        100)
+                                        .toStringAsFixed(0);
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 20),
@@ -230,7 +261,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Başlık ve İkon
                                   Row(
                                     children: [
                                       Icon(
@@ -241,7 +271,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          park["name"],
+                                          park.parkName,
                                           style: theme.textTheme.headlineSmall
                                               ?.copyWith(
                                             fontWeight: FontWeight.bold,
@@ -259,7 +289,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                           color: colorScheme.secondary),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'İlçe: ${park["district"]}',
+                                        'İlçe: ${park.district}',
                                         style: TextStyle(
                                           color: colorScheme.secondary,
                                           fontSize: 12,
@@ -269,6 +299,24 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                   ),
                                   const SizedBox(height: 12),
 
+                                  Row(
+                                    children: [
+                                      Icon(Icons.business,
+                                          size: 14,
+                                          color: colorScheme.secondary),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${park.parkType} • ${park.workHours}',
+                                        style: TextStyle(
+                                          color: colorScheme.secondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Kapasiteler
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
@@ -295,7 +343,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${park["capacity"]}',
+                                              '${park.capacity}',
                                               style: theme.textTheme
                                                   .headlineSmall
                                                   ?.copyWith(
@@ -323,7 +371,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${park["empty"]}',
+                                              '${park.freeTime}',
                                               style: theme.textTheme
                                                   .headlineSmall
                                                   ?.copyWith(
@@ -398,7 +446,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                         borderRadius:
                                             BorderRadius.circular(8),
                                         child: LinearProgressIndicator(
-                                          value: int.parse(occupancyPercentage) /
+                                          value: int.parse(occupancyPercentage.toString()) /
                                               100,
                                           minHeight: 8,
                                           backgroundColor:
@@ -423,7 +471,7 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                    '${park["name"]} seçildi'),
+                                                    '${park.parkName} seçildi'),
                                                 backgroundColor: primaryColor,
                                                 behavior:
                                                     SnackBarBehavior.floating,

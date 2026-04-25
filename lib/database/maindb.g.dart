@@ -80,7 +80,7 @@ class _$AppDataBase extends AppDataBase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 3,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -170,6 +170,12 @@ class _$Favoritedao extends Favoritedao {
   Future<void> deleteFavorite(int id) async {
     await _queryAdapter
         .queryNoReturn('DELETE FROM favorites WHERE id = ?1', arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteFavoriteByParkID(int parkID) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM favorites WHERE parkID = ?1',
+        arguments: [parkID]);
   }
 
   @override

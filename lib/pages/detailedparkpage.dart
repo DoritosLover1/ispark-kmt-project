@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:ispark_project/extras/parkingmarkers.dart';
 import 'package:ispark_project/pages/mapswebviewpage.dart';
+import 'package:ispark_project/database/databaseinstance.dart';
+import 'package:ispark_project/database/entity/favorite.dart';
 import 'package:latlong2/latlong.dart';
 
 class DetailedParkPage extends StatefulWidget {
@@ -21,7 +23,6 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
   bool _isFavorite = false;
   bool _isFavoriteBusy = false;
 
-  // Plaka ve Telefon Controllers
   late TextEditingController _plateController;
   late TextEditingController _phoneController;
   String? _plateError;
@@ -33,6 +34,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     super.initState();
     _plateController = TextEditingController();
     _phoneController = TextEditingController();
+    _checkIfFavorite();
   }
 
   @override
@@ -40,6 +42,23 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     _plateController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    try {
+      final db = await DBInstance.getInstance();
+      final parkID = widget.park["parkID"];
+
+      final favorite = await db.favoritesDao.findFavorite(parkID);
+      
+      if (mounted) {
+        setState(() {
+          _isFavorite = favorite != null;
+        });
+      }
+    } catch (e) {
+      print('Favori kontrol hatası: $e');
+    }
   }
 
   void _toggleFavorite() async {
@@ -50,24 +69,70 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     });
 
     final newState = !_isFavorite;
-
-    setState(() {
-      _isFavorite = newState;
-    });
+    final parkID = widget.park["parkID"];
+    final parkName = widget.park["parkName"] ?? "Otopark";
 
     try {
-      // TODO: DB / Firebase / Local storage entegrasyonu yapılacak
-      // örnek:
-      // await FavoritesService.togglePark(widget.park["parkID"]);
+      final db = await DBInstance.getInstance();
 
+      if (newState) {
+        final favorite = Favorite(
+          id: DateTime.now().millisecondsSinceEpoch,
+          parkID: parkID,
+          parkName: parkName,
+          district: widget.park["district"] ?? "",
+          parkType: widget.park["parkType"] ?? "",
+          workHours: widget.park["workHours"] ?? "",
+          capacity: int.tryParse(widget.park["capacity"].toString()) ?? 0,
+          freeTime: int.tryParse(widget.park["freeTime"].toString()) ?? 0,
+        );
+
+        await db.favoritesDao.insertFavorite(favorite);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$parkName favorilere eklendi ❤️'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        await db.favoritesDao.deleteFavoriteByParkID(parkID);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$parkName favorilerden çıkarıldı'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _isFavorite = newState;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isFavorite = !_isFavorite;
-      });
+      print('Favori toggle hatası: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isFavoriteBusy = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isFavoriteBusy = false;
+        });
+      }
     }
   }
 
@@ -433,7 +498,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    clipBehavior: Clip.hardEdge, // 🔥 köşeleri gerçekten keser
+                    clipBehavior: Clip.hardEdge,
                     child: FlutterMap(
                       options: MapOptions(
                         interactionOptions: InteractionOptions(

@@ -19,7 +19,7 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 */
 part 'maindb.g.dart';
 
-@Database(version: 1, entities: [Favorite])
+@Database(version: 3, entities: [Favorite])
 abstract class AppDataBase extends FloorDatabase {
   Favoritedao get favoritesDao;
 }
