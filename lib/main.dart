@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/global/universaltheme.dart';
 import 'package:ispark_project/pages/welcomepage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,12 +15,14 @@ void main() async {
   await DBInstance.getInstance();
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => BottomTabState()),
-      ],
-      child: MyApp(keyAPI: keyAPI),
+    ProviderScope(
+      child: provider.MultiProvider(
+        providers: [
+          provider.ChangeNotifierProvider(create: (context) => ThemeProvider()),
+          provider.ChangeNotifierProvider(create: (context) => BottomTabState()),
+        ],
+        child: MyApp(keyAPI: keyAPI),
+      ),
     ),
   );
 }
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
+    return provider.Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
           title: 'ISpark',

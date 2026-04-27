@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:ispark_project/extras/localservices.dart';
@@ -7,8 +8,10 @@ import 'package:ispark_project/extras/locationfunctions.dart';
 import 'package:ispark_project/extras/parkingmarkers.dart';
 import 'package:ispark_project/localentity/parkinglot.dart';
 import 'package:ispark_project/pages/detailedparkpage.dart';
+import 'package:ispark_project/pages/settingspage.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+
 class MapPage extends StatefulWidget {
   final String keyAPI;
   const MapPage({super.key, required this.keyAPI});
@@ -17,7 +20,7 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   final Localfunctions _localfunctions = Localfunctions();
   final IsparkService _isparkService = IsparkService();
@@ -30,26 +33,137 @@ class _MapPageState extends State<MapPage> {
   bool isLoading = true;
   int radius = 1000;
 
+  Timer? _refreshTimer;
+  static const Duration _refreshInterval = Duration(minutes: 5);
+  bool _isRefreshing = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _init();
   }
 
   Future<void> _init() async {
-    final loc = await _localfunctions.getCurrentLocation();
+    try {
+      final loc = await _localfunctions.getCurrentLocation();
 
-    userLocation = loc != null
-        ? LatLng(loc.latitude, loc.longitude)
-        : const LatLng(41.0082, 28.9784);
+      userLocation = loc != null
+          ? LatLng(loc.latitude, loc.longitude)
+          : const LatLng(41.0082, 28.9784);
 
-    final data = await _isparkService.fetchParkings();
+      final data = await _isparkService.fetchParkings();
 
-    setState(() {
-      parkings = data;
-      displayedParkings = data;
-      isLoading = false;
+      if (mounted) {
+        setState(() {
+          parkings = data;
+          displayedParkings = data;
+          isLoading = false;
+        });
+      }
+
+      _startAutoRefresh();
+    } catch (e) {
+      print('Error in _init: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
+
+  void _startAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(_refreshInterval, (_) async {
+      if (!_isRefreshing) {
+        await _refreshParkingData();
+      }
     });
+  }
+
+  Future<void> _refreshParkingData() async {
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+
+    try {
+      final data = await _isparkService.fetchParkings();
+
+      if (mounted) {
+        setState(() {
+          parkings = data;
+
+          if (showAllParks) {
+            displayedParkings = data;
+          } else {
+            displayedParkings = _localfunctions.getTop5NearestParkings(
+              userLocation!,
+              data,
+              radius.toDouble(),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Veriler güncellenemedi',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white
+            ),),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  Future<void> _manualRefresh() async {
+    await _refreshParkingData();
+    if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Güncel veriler getirilmiştir.',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white
+            ),),
+            backgroundColor: SettingsPage.primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startAutoRefresh();
+      _refreshParkingData();
+    } else if (state == AppLifecycleState.paused) {
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -108,7 +222,11 @@ class _MapPageState extends State<MapPage> {
                     point: userLocation!,
                     width: 40,
                     height: 40,
-                    child: Icon(Icons.person, color: colorScheme.primary),
+                    child: Icon(
+                      Icons.person,
+                      color: colorScheme.primary,
+                      size: 28,
+                    ),
                   ),
                 ],
               ),
@@ -120,19 +238,36 @@ class _MapPageState extends State<MapPage> {
             left: 0,
             right: 0,
             child: Center(
-              child: Text(
-                "İSPARK Haritası",
-                style: textTheme.headlineLarge?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.8),
-                      blurRadius: 15,
-                      offset: const Offset(0, 3),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "İSPARK Haritası",
+                    style: textTheme.headlineLarge?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.8),
+                          blurRadius: 15,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (_isRefreshing)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -147,8 +282,10 @@ class _MapPageState extends State<MapPage> {
                   child: ElevatedButton.icon(
                     onPressed: () =>
                         _mapController.move(userLocation!, 15),
-                    icon: Icon(Icons.my_location,
-                        color: colorScheme.onPrimary),
+                    icon: Icon(
+                      Icons.my_location,
+                      color: colorScheme.onPrimary,
+                    ),
                     label: Text(
                       "Beni Bul",
                       style: textTheme.labelLarge?.copyWith(
@@ -163,6 +300,7 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
@@ -172,8 +310,10 @@ class _MapPageState extends State<MapPage> {
                       });
                       _mapController.move(userLocation!, 15);
                     },
-                    icon: Icon(Icons.list,
-                        color: colorScheme.onPrimary),
+                    icon: Icon(
+                      Icons.list,
+                      color: colorScheme.onPrimary,
+                    ),
                     label: Text(
                       "Tam Harita",
                       style: textTheme.labelLarge?.copyWith(
@@ -188,10 +328,16 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      final results = _localfunctions.getTop5NearestParkings(userLocation!, parkings, radius.toDouble());
+                      final results =
+                          _localfunctions.getTop5NearestParkings(
+                        userLocation!,
+                        parkings,
+                        radius.toDouble(),
+                      );
 
                       setState(() {
                         showAllParks = false;
@@ -205,8 +351,10 @@ class _MapPageState extends State<MapPage> {
                         );
                       }
                     },
-                    icon: Icon(Icons.near_me,
-                        color: colorScheme.onPrimary),
+                    icon: Icon(
+                      Icons.near_me,
+                      color: colorScheme.onPrimary,
+                    ),
                     label: Text(
                       "En Yakın",
                       style: textTheme.labelLarge?.copyWith(
@@ -250,7 +398,12 @@ class _MapPageState extends State<MapPage> {
                         onChanged: (value) {
                           setState(() {
                             radius = value.toInt();
-                            displayedParkings = _localfunctions.getTop5NearestParkings(userLocation!, parkings, radius.toDouble());
+                            displayedParkings =
+                                _localfunctions.getTop5NearestParkings(
+                              userLocation!,
+                              parkings,
+                              radius.toDouble(),
+                            );
                           });
                         },
                       ),
@@ -279,6 +432,27 @@ class _MapPageState extends State<MapPage> {
                 ],
               ),
             ),
+
+          Positioned(
+            top: 50,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: _isRefreshing ? null : _manualRefresh,
+              tooltip: 'Verileri yenile',
+              child: _isRefreshing
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.onPrimary,
+                        ),
+                      ),
+                    )
+                  : Icon(Icons.refresh, color: colorScheme.onPrimary),
+            ),
+          ),
         ],
       ),
     );
