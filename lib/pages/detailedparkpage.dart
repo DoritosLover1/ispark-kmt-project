@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ispark_project/extras/parkingmarkers.dart';
-import 'package:ispark_project/pages/mapswebviewpage.dart';
 import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
+import 'package:ispark_project/providers/favorite_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class DetailedParkPage extends StatefulWidget {
+class DetailedParkPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> park;
   final String keyAPI = dotenv.env['MAPTILER_MAPS_API_KEY'] ?? '';
 
   DetailedParkPage({super.key, required this.park});
 
   @override
-  State<DetailedParkPage> createState() => _DetailedParkPageState();
+  ConsumerState<DetailedParkPage> createState() => _DetailedParkPageState();
 }
 
-class _DetailedParkPageState extends State<DetailedParkPage> {
+class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
   static const primaryColor = Color(0xFF0056D2);
 
   bool _isFavorite = false;
@@ -48,33 +50,28 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     try {
       final db = await DBInstance.getInstance();
       final parkID = widget.park["parkID"];
-
       final favorite = await db.favoritesDao.findFavorite(parkID);
-      
+
       if (mounted) {
         setState(() {
           _isFavorite = favorite != null;
         });
       }
     } catch (e) {
-      print('Favori kontrol hatası: $e');
+      // sessizce geç
     }
   }
 
   void _toggleFavorite() async {
     if (_isFavoriteBusy) return;
 
-    setState(() {
-      _isFavoriteBusy = true;
-    });
+    setState(() => _isFavoriteBusy = true);
 
     final newState = !_isFavorite;
     final parkID = widget.park["parkID"];
     final parkName = widget.park["parkName"] ?? "Otopark";
 
     try {
-      final db = await DBInstance.getInstance();
-
       if (newState) {
         final favorite = Favorite(
           id: DateTime.now().millisecondsSinceEpoch,
@@ -85,37 +82,55 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
           workHours: widget.park["workHours"] ?? "",
           capacity: int.tryParse(widget.park["capacity"].toString()) ?? 0,
           freeTime: int.tryParse(widget.park["freeTime"].toString()) ?? 0,
+          lat: widget.park['lat'],
+          lng: widget.park['lng'],
         );
 
-        await db.favoritesDao.insertFavorite(favorite);
+        await ref.read(favoriteParksProvider.notifier).addFavorite(favorite);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$parkName favorilere eklendi ❤️'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              content: Text(
+                '$parkName favorilere eklendi ❤️',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              backgroundColor: primaryColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
       } else {
-        await db.favoritesDao.deleteFavoriteByParkID(parkID);
+        await ref.read(favoriteParksProvider.notifier).removeFavorite(parkID);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$parkName favorilerden çıkarıldı'),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 2),
+              content: Text(
+                '$parkName favorilerden çıkarıldı ✅',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              backgroundColor: primaryColor,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
       }
 
       if (mounted) {
-        setState(() {
-          _isFavorite = newState;
-        });
+        setState(() => _isFavorite = newState);
       }
     } catch (e) {
       print('Favori toggle hatası: $e');
@@ -129,9 +144,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isFavoriteBusy = false;
-        });
+        setState(() => _isFavoriteBusy = false);
       }
     }
   }
@@ -161,10 +174,8 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
   }
 
   void _openMapViewer(BuildContext context) {
-    final double lat =
-        double.tryParse(widget.park["lat"].toString()) ?? 0;
-    final double lng =
-        double.tryParse(widget.park["lng"].toString()) ?? 0;
+    final double lat = double.tryParse(widget.park["lat"].toString()) ?? 0;
+    final double lng = double.tryParse(widget.park["lng"].toString()) ?? 0;
 
     if (lat == 0 || lng == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,16 +184,34 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MapsWebViewPage(
-          lat: lat,
-          lng: lng,
-          name: widget.park["parkName"] ?? "Otopark",
-        ),
-      ),
-    );
+    _openGoogleMaps(context, lat, lng);
+  }
+
+  Future<void> _openGoogleMaps(
+      BuildContext context, double lat, double lng) async {
+    final String googleMapsAppUrl = 'google.navigation:q=$lat,$lng&z=16';
+    final String googleMapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+
+    try {
+      if (await canLaunchUrl(Uri.parse(googleMapsAppUrl))) {
+        await launchUrl(Uri.parse(googleMapsAppUrl));
+      } else if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
+        await launchUrl(Uri.parse(googleMapsUrl));
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Google Maps açılamadı")),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Hata: $e")),
+        );
+      }
+    }
   }
 
   Widget _statusBadge(int isOpen, TextTheme textTheme) {
@@ -244,56 +273,39 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     final plate = _plateController.text.trim().toUpperCase();
 
     if (plate.isEmpty) {
-      setState(() {
-        _plateError = 'Plaka boş olamaz';
-      });
+      setState(() => _plateError = 'Plaka boş olamaz');
       return;
     }
-    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$').hasMatch(plate)) {
-      setState(() {
-        _plateError = 'Geçerli bir plaka girin (ör: 34ABC1234)';
-      });
+    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$')
+        .hasMatch(plate)) {
+      setState(() => _plateError = 'Geçerli bir plaka girin (ör: 34ABC1234)');
       return;
     }
-
-    setState(() {
-      _plateError = null;
-    });
+    setState(() => _plateError = null);
   }
 
   void _validatePhone() {
     final phone = _phoneController.text.trim();
 
     if (phone.isEmpty) {
-      setState(() {
-        _phoneError = 'Telefon numarası boş olamaz';
-      });
+      setState(() => _phoneError = 'Telefon numarası boş olamaz');
       return;
     }
-
     if (!RegExp(r'^05\d{9}$').hasMatch(phone)) {
-      setState(() {
-        _phoneError = 'Geçerli bir telefon numarası girin (05XXXXXXXXX)';
-      });
+      setState(() => _phoneError =
+          'Geçerli bir telefon numarası girin (05XXXXXXXXX)');
       return;
     }
-
-    setState(() {
-      _phoneError = null;
-    });
+    setState(() => _phoneError = null);
   }
 
   void _createReservation() async {
     _validatePlate();
     _validatePhone();
 
-    if (_plateError != null || _phoneError != null) {
-      return;
-    }
+    if (_plateError != null || _phoneError != null) return;
 
-    setState(() {
-      _isCreatingReservation = true;
-    });
+    setState(() => _isCreatingReservation = true);
 
     try {
       final plate = _plateController.text.trim().toUpperCase();
@@ -307,7 +319,6 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
       print('- Plaka: $plate');
       print('- Telefon: $phone');
 
-      // Başarı mesajı
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -316,8 +327,6 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
             duration: const Duration(seconds: 3),
           ),
         );
-
-        // Formu temizle
         _plateController.clear();
         _phoneController.clear();
       }
@@ -331,9 +340,9 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
         );
       }
     } finally {
-      setState(() {
-        _isCreatingReservation = false;
-      });
+      if (mounted) {
+        setState(() => _isCreatingReservation = false);
+      }
     }
   }
 
@@ -346,24 +355,15 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
     final park = widget.park;
     final parkLoc = LatLng(park["lat"], park["lng"]);
 
-    final int capacity =
-        int.tryParse(park["capacity"].toString()) ?? 0;
-
-    final int empty =
-        int.tryParse(park["emptyCapacity"].toString()) ?? 0;
-
-    final int freeTime =
-        int.tryParse(park["freeTime"].toString()) ?? 0;
-
-    final int isOpen =
-        int.tryParse(park["isOpen"].toString()) ?? 0;
-
+    final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
+    final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
+    final int freeTime = int.tryParse(park["freeTime"].toString()) ?? 0;
+    final int isOpen = int.tryParse(park["isOpen"].toString()) ?? 0;
     final int occupancy =
         capacity == 0 ? 0 : ((capacity - empty) / capacity * 100).toInt();
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -378,7 +378,6 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
           ),
         ),
         centerTitle: true,
-
         actions: [
           AnimatedScale(
             scale: _isFavorite ? 1.2 : 1.0,
@@ -397,12 +396,10 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
           ),
         ],
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -417,27 +414,21 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                       color: primaryColor,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     park["district"] ?? "-",
                     style: textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[700],
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     "${park["parkType"] ?? "-"} • ${park["workHours"] ?? "-"}",
                     style: textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -467,17 +458,14 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                   _row("Boş", "$empty", textTheme),
                   const SizedBox(height: 10),
                   _row("Doluluk", "%$occupancy", textTheme),
-
                   const SizedBox(height: 16),
-
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: LinearProgressIndicator(
                       value: occupancy / 100,
                       minHeight: 10,
                       backgroundColor: primaryColor.withOpacity(0.2),
-                      valueColor:
-                          const AlwaysStoppedAnimation(primaryColor),
+                      valueColor: const AlwaysStoppedAnimation(primaryColor),
                     ),
                   ),
                 ],
@@ -502,7 +490,7 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                     child: FlutterMap(
                       options: MapOptions(
                         interactionOptions: InteractionOptions(
-                          flags: InteractiveFlag.none
+                          flags: InteractiveFlag.none,
                         ),
                         initialCenter: parkLoc,
                       ),
@@ -514,13 +502,13 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                         ),
                         MarkerLayer(
                           markers: [
-                            ParkingMarkers.getSingleParkingMarker(park, context)
+                            ParkingMarkers.getSingleParkingMarker(
+                                park, context),
                           ],
                         ),
                       ],
                     ),
                   ),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -584,14 +572,13 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                       }
                     },
                   ),
-
                   const SizedBox(height: 16),
                   TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: 'Telefon Numarası',
-                      hintText: '5xxxxxxxxxx',
+                      hintText: '05XXXXXXXXX',
                       prefixIcon: const Icon(Icons.phone),
                       errorText: _phoneError,
                       border: OutlineInputBorder(
@@ -615,24 +602,20 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                       }
                     },
                   ),
-
                   const SizedBox(height: 16),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _isCreatingReservation
-                          ? null
-                          : _createReservation,
+                      onPressed:
+                          _isCreatingReservation ? null : _createReservation,
                       icon: _isCreatingReservation
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
-                                ),
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.white),
                               ),
                             )
                           : const Icon(Icons.calendar_today),
@@ -652,14 +635,13 @@ class _DetailedParkPageState extends State<DetailedParkPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 8,
-                        disabledBackgroundColor:
-                            primaryColor.withOpacity(0.5),
+                        disabledBackgroundColor: primaryColor.withOpacity(0.5),
                       ),
                     ),
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

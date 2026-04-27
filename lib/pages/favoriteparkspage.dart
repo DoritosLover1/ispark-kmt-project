@@ -1,65 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:ispark_project/database/databaseinstance.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
+import 'package:ispark_project/pages/detailedparkpage.dart';
+import 'package:ispark_project/providers/favorite_provider.dart';
 
-class FavoriteParksPage extends StatefulWidget {
+class FavoriteParksPage extends ConsumerStatefulWidget {
   const FavoriteParksPage({super.key});
 
   @override
-  State<FavoriteParksPage> createState() => _FavoriteParksPageState();
+  ConsumerState<FavoriteParksPage> createState() => _FavoriteParksPageState();
 }
 
-class _FavoriteParksPageState extends State<FavoriteParksPage> {
+class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
   static const primaryColor = Color(0xFF0056D2);
-
-  List<Favorite> _favoriteParksList = [];
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorites();
-  }
-
-  Future<void> _loadFavorites() async {
-    if (!mounted) return;
-    
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final db = await DBInstance.getInstance();
-      final favorites = await db.favoritesDao.getAllFavorites();
-
-      if (mounted) {
-        setState(() {
-          _favoriteParksList = favorites;
-        });
-      }
-    } catch (e) {
-      print('Favorileri yüklerken hata: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Favorileri yüklerken hata oluştu: $e'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
 
   BoxDecoration _blueDecoration() {
     return BoxDecoration(
@@ -81,24 +34,19 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
   }
 
   Future<void> _removePark(Favorite park) async {
-    if (_isLoading) return;
-
     try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final db = await DBInstance.getInstance();
-      await db.favoritesDao.deleteFavorite(park.id);
+      await ref.read(favoriteParksProvider.notifier).removeFavorite(park.parkID);
 
       if (!mounted) return;
-      setState(() {
-        _favoriteParksList.removeWhere((p) => p.id == park.id);
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${park.parkName} favorilerden çıkarıldı ✅'),
+          content: Text(
+            '${park.parkName} favorilerden çıkarıldı ✅',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
           backgroundColor: primaryColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -110,7 +58,13 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Otopark silinirken hata oluştu: $e'),
+            content: Text(
+              'Otopark silinirken hata oluştu',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -118,12 +72,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
             ),
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -154,11 +102,15 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
               foregroundColor: Colors.grey[700],
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text(
+            child: Text(
               'İptal',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .displayMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
@@ -166,15 +118,19 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 2,
             ),
-            child: const Text(
+            child: Text(
               'Sil',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
         ],
@@ -191,6 +147,8 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final favoriteParksList = ref.watch(favoriteParksProvider);
+
     return Scaffold(
       backgroundColor: colorScheme.onPrimary,
       appBar: AppBar(
@@ -200,24 +158,27 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
         elevation: 0,
         title: Text(
           'Favori Otoparklar',
-          style: theme.textTheme.headlineMedium,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          if (_isLoading) const LinearProgressIndicator(color: primaryColor),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadFavorites,
+              onRefresh: () =>
+                  ref.read(favoriteParksProvider.notifier).loadFavorites(),
               color: primaryColor,
-              child: _favoriteParksList.isEmpty
+              child: favoriteParksList.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            CupertinoIcons.car_detailed,
+                            Icons.local_parking_rounded,
                             size: MediaQuery.of(context).size.height * 0.12,
                             color: Colors.grey[400],
                           ),
@@ -240,19 +201,19 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                       ),
                     )
                   : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         children: List.generate(
-                          _favoriteParksList.length,
+                          favoriteParksList.length,
                           (index) {
-                            final park = _favoriteParksList[index];
-                            final occupancyPercentage =
-                                park.capacity == 0
-                                    ? 0
-                                    : (((park.capacity - park.freeTime) /
+                            final park = favoriteParksList[index];
+                            final occupancyPercentage = park.capacity == 0
+                                ? '0'
+                                : (((park.capacity - park.freeTime) /
                                             park.capacity) *
                                         100)
-                                        .toStringAsFixed(0);
+                                    .toStringAsFixed(0);
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 20),
@@ -316,7 +277,6 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // Kapasiteler
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
@@ -330,91 +290,21 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceAround,
                                       children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Toplam Kapasite',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: colorScheme.secondary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${park.capacity}',
-                                              style: theme.textTheme
-                                                  .headlineSmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: primaryColor,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        Container(
-                                          width: 1,
-                                          height: 40,
-                                          color: primaryColor.withOpacity(0.2),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Boş Yer',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: colorScheme.secondary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${park.freeTime}',
-                                              style: theme.textTheme
-                                                  .headlineSmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: primaryColor,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        Container(
-                                          width: 1,
-                                          height: 40,
-                                          color: primaryColor.withOpacity(0.2),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Doluluk Oranı',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: colorScheme.secondary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '$occupancyPercentage%',
-                                              style: theme.textTheme
-                                                  .headlineSmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: primaryColor,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
+                                        _statColumn(theme, colorScheme,
+                                            'Toplam Kapasite',
+                                            '${park.capacity}'),
+                                        _divider(),
+                                        _statColumn(theme, colorScheme,
+                                            'Boş Yer', '${park.freeTime}'),
+                                        _divider(),
+                                        _statColumn(theme, colorScheme,
+                                            'Doluluk Oranı',
+                                            '$occupancyPercentage%'),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // İlerleme Çubuğu
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -432,12 +322,11 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                           ),
                                           Text(
                                             '$occupancyPercentage%',
-                                            style: theme.textTheme
-                                                .displaySmall
+                                            style: theme.textTheme.displaySmall
                                                 ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: primaryColor,
-                                                ),
+                                              fontWeight: FontWeight.bold,
+                                              color: primaryColor,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -446,39 +335,45 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                         borderRadius:
                                             BorderRadius.circular(8),
                                         child: LinearProgressIndicator(
-                                          value: int.parse(occupancyPercentage.toString()) /
-                                              100,
+                                          value:
+                                              int.parse(occupancyPercentage) /
+                                                  100,
                                           minHeight: 8,
                                           backgroundColor:
                                               primaryColor.withOpacity(0.2),
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            primaryColor,
-                                          ),
+                                                  primaryColor),
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // Aksiyon Butonları
                                   Row(
                                     children: [
                                       Expanded(
                                         child: ElevatedButton(
                                           onPressed: () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    '${park.parkName} seçildi'),
-                                                backgroundColor: primaryColor,
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12),
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    DetailedParkPage(
+                                                  park: {
+                                                    'parkID': park.parkID,
+                                                    'parkName': park.parkName,
+                                                    'district': park.district,
+                                                    'parkType': park.parkType,
+                                                    'workHours': park.workHours,
+                                                    'capacity': park.capacity,
+                                                    'emptyCapacity':
+                                                        park.freeTime,
+                                                    'freeTime': park.freeTime,
+                                                    'lat': park.lat as double,
+                                                    'lng': park.lng as double,
+                                                    'isOpen': 1,
+                                                  },
                                                 ),
                                               ),
                                             );
@@ -487,18 +382,21 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
                                             backgroundColor: primaryColor,
                                             foregroundColor: Colors.white,
                                             padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
-                                            ),
+                                                vertical: 12),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
                                           ),
-                                          child: const Text(
+                                          child: Text(
                                             'Detaylar',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                           ),
                                         ),
                                       ),
@@ -531,6 +429,35 @@ class _FavoriteParksPageState extends State<FavoriteParksPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _statColumn(ThemeData theme, ColorScheme colorScheme, String label,
+      String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: colorScheme.secondary),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: primaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _divider() {
+    return Container(
+      width: 1,
+      height: 40,
+      color: primaryColor.withOpacity(0.2),
     );
   }
 }

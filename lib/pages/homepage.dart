@@ -14,61 +14,61 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Her tab için kendi Navigator'ı
+  final Map<int, GlobalKey<NavigatorState>> _navigatorKeys = {
+    0: GlobalKey<NavigatorState>(),
+    1: GlobalKey<NavigatorState>(),
+    2: GlobalKey<NavigatorState>(),
+  };
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final themeProvider = Provider.of<BottomTabState>(context);
 
     return Scaffold(
-      body: Navigator(
-        key: themeProvider.navigatorKey,
-        onGenerateRoute: (settings) {
-          return MaterialPageRoute(
-            builder: (_) => MapPage(keyAPI: widget.keyAPI),
-          );
-        },
+      body: IndexedStack(
+        index: themeProvider.selectedTab,
+        children: [
+          Navigator(
+            key: _navigatorKeys[0],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (_) => MapPage(keyAPI: widget.keyAPI),
+              );
+            },
+          ),
+          Navigator(
+            key: _navigatorKeys[1],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (_) => FavoriteParksPage(),
+              );
+            },
+          ),
+          Navigator(
+            key: _navigatorKeys[2],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (_) => SettingsPage(),
+              );
+            },
+          ),
+        ],
       ),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: themeProvider.selectedTab,
 
         onTap: (index) {
-          setState(() {
-            themeProvider.setTab(index);
-          });
-
-          switch (index) {
-            case 0:
-              themeProvider.navigatorKey.currentState!.pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => MapPage(keyAPI: widget.keyAPI),
-                ),
-              );
-              break;
-
-            case 1:
-              themeProvider.navigatorKey.currentState!.pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => FavoriteParksPage(),
-                ),
-              );
-              break;
-            
-            case 2:
-              themeProvider.navigatorKey.currentState!.pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => SettingsPage(),
-                ),
-              );
-              break;
-          }
+          themeProvider.setTab(index);
         },
 
         type: BottomNavigationBarType.fixed,
 
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.secondary,
-        backgroundColor: colorScheme.surface,
+        backgroundColor: colorScheme.onPrimary,
 
         elevation: 8,
 
