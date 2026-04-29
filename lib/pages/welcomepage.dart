@@ -33,7 +33,6 @@ class _WelcomePageState extends State<WelcomePage> {
                       children: [
                         const SizedBox(height: 24),
 
-                        /// TITLE
                         Text(
                           "İSPARK",
                           style: textTheme.headlineLarge?.copyWith(
@@ -62,7 +61,6 @@ class _WelcomePageState extends State<WelcomePage> {
 
                         const SizedBox(height: 32),
 
-                        /// FEATURES
                         _FeatureCard(
                           icon: Icons.location_on,
                           title: "En Yakın Otoparklar",
@@ -83,17 +81,8 @@ class _WelcomePageState extends State<WelcomePage> {
 
                         const Spacer(),
 
-                        /// BUTTONS
                         _PrimaryButton(
-                          text: "Giriş Yap",
-                          onTap: () {},
-                          colorScheme: colorScheme,
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        _SecondaryButton(
-                          text: "Giriş Yapmadan Devam Et",
+                          text: "Devam Et",
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
@@ -101,12 +90,11 @@ class _WelcomePageState extends State<WelcomePage> {
                                 builder: (_) => HomePage(keyAPI: widget.keyAPI),
                               ),
                             );
-                          },
+                          }, colorScheme: colorScheme,
                         ),
 
                         const SizedBox(height: 20),
 
-                        /// FOOTER (EN AŞAĞI İTTİK)
                         Text(
                           "Devam ederek Kullanım Koşullarını kabul etmiş olursunuz",
                           textAlign: TextAlign.center,

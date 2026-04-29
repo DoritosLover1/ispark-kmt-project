@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -7,6 +9,7 @@ import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
 import 'package:ispark_project/providers/favorite_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailedParkPage extends ConsumerStatefulWidget {
@@ -27,15 +30,27 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
 
   late TextEditingController _plateController;
   late TextEditingController _phoneController;
+
+  late TextEditingController _plateControllerSecond;
+  late TextEditingController _phoneControllerSecond;
+  late TextEditingController _otpController;
   String? _plateError;
   String? _phoneError;
+
+  String? _plateSecondaryError;
+  String? _phoneSecondaryError;
+  String? _otpError;
   bool _isCreatingReservation = false;
+  bool _isCancelingResevation = false;
 
   @override
   void initState() {
     super.initState();
     _plateController = TextEditingController();
     _phoneController = TextEditingController();
+    _plateControllerSecond = TextEditingController();
+    _phoneControllerSecond = TextEditingController();
+    _otpController = TextEditingController();
     _checkIfFavorite();
   }
 
@@ -58,7 +73,6 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
         });
       }
     } catch (e) {
-      // sessizce geç
     }
   }
 
@@ -299,6 +313,50 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     setState(() => _phoneError = null);
   }
 
+    void _validatePlateSecondary() {
+    final plate = _plateControllerSecond.text.trim().toUpperCase();
+
+    if (plate.isEmpty) {
+      setState(() => _plateSecondaryError = 'Plaka boş olamaz');
+      return;
+    }
+    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$')
+        .hasMatch(plate)) {
+      setState(() => _plateSecondaryError = 'Geçerli bir plaka girin (ör: 34ABC1234)');
+      return;
+    }
+    setState(() => _plateSecondaryError = null);
+  }
+
+  void _validatePhoneSecondary() {
+    final phone = _phoneControllerSecond.text.trim();
+
+    if (phone.isEmpty) {
+      setState(() => _phoneSecondaryError = 'Telefon numarası boş olamaz');
+      return;
+    }
+    if (!RegExp(r'^05\d{9}$').hasMatch(phone)) {
+      setState(() => _phoneSecondaryError =
+          'Geçerli bir telefon numarası girin (05XXXXXXXXX)');
+      return;
+    }
+    setState(() => _phoneSecondaryError = null);
+  }
+
+  void _validateOTP() {
+    final givenOTP = _otpController.text.trim();
+
+    if (givenOTP.isEmpty) {
+      setState(() => _otpError = 'OTP kodu boş olamaz');
+      return;
+    }
+    if (!RegExp(r'\d{6}$').hasMatch(givenOTP)) {
+      setState(() => _otpError = "Geçersiz bir OTP kodu girdiniz");
+      return;
+    }
+    setState(() => _otpError = null);
+  }
+
   void _createReservation() async {
     _validatePlate();
     _validatePhone();
@@ -311,20 +369,112 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       final plate = _plateController.text.trim().toUpperCase();
       final phone = _phoneController.text.trim();
       final parkID = widget.park["parkID"] ?? 0;
-      final parkName = widget.park["parkName"] ?? "Otopark";
+      final supabase = Supabase.instance.client;
 
-      // TODO: API çağrısı veya DB işlemi yapılacak
-      print('Randevu Oluşturuluyor:');
-      print('- Park: $parkName (ID: $parkID)');
-      print('- Plaka: $plate');
-      print('- Telefon: $phone');
+      final otpRes = await supabase.functions.invoke(
+        'ispark-rezervasyon-otp-handler',
+        body: {'telefon_numarasi': phone},
+      );
+
+      final otpRaw = otpRes.data;
+      final Map<String, dynamic> otpData = otpRaw is String
+          ? jsonDecode(otpRaw)
+          : Map<String, dynamic>.from(otpRaw);
+
+      if (otpData['success'] != true) {
+        throw Exception('OTP gönderilemedi');
+      }
+
+      final otp = otpData['otp'].toString();
+
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Doğrulama Kodu'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Normalde bu kod SMS ile gelecekti.\nDemo modunda ekranda gösteriyoruz:',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                otp,
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                  letterSpacing: 8,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Bu kodu otoparka girişte söyleyiniz.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Anladım',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      final resRes = await supabase.functions.invoke(
+        'ispark-rezervasyon-handler',
+        body: {
+          'plaka': plate,
+          'otopark_id': parkID.toString(),
+          'telefon_numarasi': phone,
+          'otp': otp,
+        },
+      );
+
+      final resRaw = resRes.data;
+      final Map<String, dynamic> resData = resRaw is String
+          ? jsonDecode(resRaw)
+          : Map<String, dynamic>.from(resRaw);
+
+      if (resData['success'] != true) {
+        throw Exception(resData['error'] ?? 'Rezervasyon oluşturulamadı');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Randevu başarıyla oluşturuldu! Plaka: $plate'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            content: Text(
+              'Rezervasyon oluşturuldu, plaka: $plate',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            backgroundColor: primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         _plateController.clear();
@@ -334,8 +484,18 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text(
+              '$e',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -345,6 +505,89 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       }
     }
   }
+
+  void _cancelReservation() async {
+    _validatePlateSecondary();
+    _validatePhoneSecondary();
+    _validateOTP();
+
+    if (_plateError != null || _phoneError != null) return;
+
+    setState(() => _isCancelingResevation = true);
+
+    try {
+      final plate = _plateControllerSecond.text.trim().toUpperCase();
+      final phone = _phoneControllerSecond.text.trim();
+      final givenOTP = _otpController.text.trim();
+      final parkID = widget.park["parkID"] ?? 0;
+      final supabase = Supabase.instance.client;
+
+      final resRes = await supabase.functions.invoke(
+        'ispark-rezervasyon-iptal-handler',
+        body: {
+          'plaka': plate,
+          'otopark_id': parkID.toString(),
+          'telefon_numarasi': phone,
+          'otp': givenOTP,
+        },
+      );
+
+      final resRaw = resRes.data;
+      final Map<String, dynamic> resData = resRaw is String
+          ? jsonDecode(resRaw)
+          : Map<String, dynamic>.from(resRaw);
+
+      if (resData['success'] != true) {
+        throw Exception(resData['error'] ?? 'Rezervasyon oluşturulamadı');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Rezervasyon başarıyla iptal edilmiştir.',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            backgroundColor: primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        _plateControllerSecond.clear();
+        _phoneControllerSecond.clear();
+        _otpController.clear();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$e',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCreatingReservation = false);
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -636,6 +879,144 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                         ),
                         elevation: 8,
                         disabledBackgroundColor: primaryColor.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: _cardDecoration(primaryColor),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _plateControllerSecond,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: 'Araç Plakası',
+                      hintText: '34ABC1234',
+                      prefixIcon: const Icon(Icons.directions_car),
+                      errorText: _plateSecondaryError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: primaryColor,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_plateSecondaryError!= null) {
+                        setState(() => _plateSecondaryError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _phoneControllerSecond,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Telefon Numarası',
+                      hintText: '05XXXXXXXXX',
+                      prefixIcon: const Icon(Icons.phone),
+                      errorText: _phoneSecondaryError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: primaryColor,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_phoneSecondaryError != null) {
+                        setState(() => _phoneSecondaryError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'OTP Kodu',
+                      hintText: 'XXXXXX (6 haneli sayı)',
+                      prefixIcon: const Icon(Icons.phone),
+                      errorText: _otpError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: primaryColor,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) {
+                      if (_otpError != null) {
+                        setState(() => _otpError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          _isCancelingResevation ? null : _cancelReservation,
+                      icon: _isCancelingResevation
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.calendar_today),
+                      label: Text(
+                        _isCancelingResevation
+                            ? 'İptal Ediliyor..'
+                            : 'Randevuyu İptal Et',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.error,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 8,
+                        disabledBackgroundColor: colorScheme.error.withOpacity(0.5),
                       ),
                     ),
                   ),
