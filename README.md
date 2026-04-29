@@ -22,11 +22,13 @@
 ## 🛠️ Kullanılan Teknolojiler (Tech Stack)
 
 ### Ana Katmanlar
+
 - **Framework:** [Flutter](https://flutter.dev)
 - **Arka Plan (Backend):** [Supabase](https://supabase.io) (Veri yönetimi ve uzaktan depolama)
 - **Yerel Veritabanı:** [Floor](https://pub.dev/packages/floor) (SQLite tabanlı yerel persistence)
 
 ### Kütüphaneler ve Araçlar
+
 - **Harita:** `flutter_map` & `latlong2`
 - **Konum Servisleri:** `geolocator` & `permission_handler`
 - **Durum Yönetimi (State Management):** `flutter_riverpod` & `provider`
@@ -40,18 +42,22 @@
 Projeyi yerel makinenizde çalıştırmak için aşağıdaki adımları takip edebilirsiniz:
 
 ### 1. Depoyu Klonlayın
+
 ```bash
 git clone https://github.com/kullaniciadi/ispark_project.git
 cd ispark_project
 ```
 
 ### 2. Bağımlılıkları Yükleyin
+
 ```bash
 flutter pub get
 ```
 
 ### 3. Ortam Değişkenlerini (Environment Variables) Ayarlayın
+
 Kök dizinde bir `.env` dosyası oluşturun ve gerekli anahtarları ekleyin:
+
 ```env
 MAPTILER_MAPS_API_KEY=your_maptiler_key
 SUPABASE_URL=your_supabase_url
@@ -59,30 +65,45 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ### 4. Kod Oluşturucu (Build Runner) Çalıştırın
+
 Floor veritabanı dosyalarının oluşturulması için:
+
 ```bash
 flutter pub run build_runner build
 ```
 
 ### 5. Uygulamayı Başlatın
+
 ```bash
 flutter run
 ```
 
 ---
 
-## 🎨 Tasarım ve Taslak (Screenshots)
-
-*Uygulama ekran görüntülerini buraya ekleyebilirsiniz.*
+## 🎨 Ekran Görüntüleri (Screenshots)
 
 | Hoşgeldiniz | Harita Görünümü | Favoriler | Ayarlar |
 | :---: | :---: | :---: | :---: |
-| ![Welcome]([screenshots/welcome.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/welcome.jpg)) | ![Map]([screenshots/map.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/map.jpg)) | ![Favorites]([screenshots/favorites.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/favorites.jpg)) | ![Settings]([screenshots/settings.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/settings.jpg)) |
+| ![Welcome](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/welcome.jpg) | ![Map](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/map.jpg) | ![Favorites](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/favorites.jpg) | ![Settings](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/settings.jpg) |
 
 ### 📽️ Uygulama Tanıtım Videosu
-*Aşağıdaki alana projeyi tanıtan videoyu ekleyebilirsiniz:*
 
-![Demo Video](screenshots/demo_video.mp4)
+> 💡 GitHub, MP4 dosyalarını README içinde oynatmaz. Videoyu aşağıdaki yöntemlerden biriyle ekleyebilirsiniz:
+
+**Seçenek 1 — GIF olarak dönüştür (önerilen):**
+```md
+![Demo](screenshots/demo.gif)
+```
+
+**Seçenek 2 — YouTube / link olarak ekle:**
+```md
+[![Demo Video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+```
+
+**Seçenek 3 — GitHub release'e yükle ve linkle:**
+```md
+[▶️ Demo Videoyu İzle](https://github.com/DoritosLover1/ispark-kmt-project/releases/download/v1.0/demo_video.mp4)
+```
 
 ---
 
