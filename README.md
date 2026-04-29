@@ -63,7 +63,7 @@ MAPTILER_MAPS_API_KEY=your_maptiler_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
-Dikkat edilmesi gereken bi konu ise bu projeyi doğrudan bu hâliyle kullanamazsınız. Sadece haritada görme ve favorilere ekleme özelliği var. Diğer özellikleri için SUPABASE ya da Firebase gibi hizmetlerden yararlanmanız gerekmetedir. Burada yazılar API adları parametreler burada var olan SUPABASE'de kodlanılmış olan Edge Functions'lara özeldir ve kendimize ait bir veri tabanı bulunmaktadır. Burada kişiselleştirmek isterseniz, kendiniz Edge Functions ve Database kısımlarına göre değiştirmeniz işlemeniz gerekmektedir. Ayrıca kendinize ait olan SUPABASE_URL, SUPABASE_ANON_KEY ve MAPTILER_MAPS_API_KEY kullanmanız zorunludur.
+Dikkat edilmesi gereken bi konu ise bu projeyi doğrudan bu hâliyle kullanamazsınız. Sadece haritada görme ve favorilere ekleme özelliği var. Diğer özellikleri için **SUPABASE** ya da **Firebase** gibi hizmetlerden yararlanmanız gerekmetedir. Burada yazılar API adları parametreler burada var olan **SUPABASE**'de kodlanılmış olan **Edge Functions**'lara özeldir ve kendimize ait bir veri tabanı bulunmaktadır. Burada kişiselleştirmek isterseniz, kendiniz Edge Functions ve Database kısımlarına göre değiştirmeniz işlemeniz gerekmektedir. Ayrıca kendinize ait olan** SUPABASE_URL**, **SUPABASE_ANON_KEY** ve **MAPTILER_MAPS_API_KEY** kullanmanız zorunludur.
 
 ### 4. Kod Oluşturucu (Build Runner) Çalıştırın
 
