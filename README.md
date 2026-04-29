@@ -88,22 +88,7 @@ flutter run
 
 ### 📽️ Uygulama Tanıtım Videosu
 
-> 💡 GitHub, MP4 dosyalarını README içinde oynatmaz. Videoyu aşağıdaki yöntemlerden biriyle ekleyebilirsiniz:
-
-**Seçenek 1 — GIF olarak dönüştür (önerilen):**
-```md
-![Demo](screenshots/demo.gif)
-```
-
-**Seçenek 2 — YouTube / link olarak ekle:**
-```md
-[![Demo Video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
-```
-
-**Seçenek 3 — GitHub release'e yükle ve linkle:**
-```md
-[▶️ Demo Videoyu İzle](https://github.com/DoritosLover1/ispark-kmt-project/releases/download/v1.0/demo_video.mp4)
-```
+https://github.com/user-attachments/assets/a6f00dcd-6c23-48a8-b66f-7268de01ab1b
 
 ---
 
