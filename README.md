@@ -77,7 +77,7 @@ flutter run
 
 | Hoşgeldiniz | Harita Görünümü | Favoriler | Ayarlar |
 | :---: | :---: | :---: | :---: |
-| ![Welcome](screenshots/welcome.jpg) | ![Map](screenshots/map.jpg) | ![Favorites](screenshots/favorites.jpg) | ![Settings](screenshots/settings.jpg) |
+| ![Welcome]([screenshots/welcome.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/welcome.jpg)) | ![Map]([screenshots/map.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/map.jpg)) | ![Favorites]([screenshots/favorites.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/favorites.jpg)) | ![Settings]([screenshots/settings.jpg](https://github.com/DoritosLover1/ispark-kmt-project/blob/db_init/screenshots/settings.jpg)) |
 
 ### 📽️ Uygulama Tanıtım Videosu
 *Aşağıdaki alana projeyi tanıtan videoyu ekleyebilirsiniz:*
