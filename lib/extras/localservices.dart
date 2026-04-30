@@ -2,16 +2,24 @@ import 'dart:convert';
 
 import 'package:ispark_project/localentity/parkinglot.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class IsparkService {
   Future<List<ParkingLot>> fetchParkings() async {
-    final response =
-        await http.get(Uri.parse("https://api.ibb.gov.tr/ispark/Park"));
+    final supabase = Supabase.instance.client;
 
-    final List data = json.decode(response.body);
+    final res = await supabase.functions.invoke('ispark-otopark-listesi-retrieve');
 
-    return data
-        .map<ParkingLot>((e) => ParkingLot.fromJson(e))
-        .toList();
+    final resRaw = res.data;
+    final Map<String, dynamic> resData = resRaw is String
+        ? jsonDecode(resRaw)
+        : Map<String, dynamic>.from(resRaw);
+
+    if (resData['success'] != true) {
+      throw Exception(resData['error'] ?? 'Veri çekilemedi');
+    }
+
+    final List data = resData['data'];
+    return data.map<ParkingLot>((e) => ParkingLot.fromJson(e)).toList();
   }
 }

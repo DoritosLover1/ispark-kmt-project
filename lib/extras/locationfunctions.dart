@@ -98,7 +98,7 @@ class Localfunctions {
     yield* Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        distanceFilter: 50,
       ),
     ).map((position) => LatLng(position.latitude, position.longitude));
   }

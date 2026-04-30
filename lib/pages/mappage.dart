@@ -33,7 +33,11 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   bool isLoading = true;
   int radius = 1000;
 
+  LatLng? _lastRefreshLocation;
+  static const double _refreshDistanceThreshold = 200;
+
   Timer? _refreshTimer;
+  StreamSubscription<LatLng>? _locationStreamSubscription;
   static const Duration _refreshInterval = Duration(minutes: 5);
   bool _isRefreshing = false;
 
@@ -42,6 +46,21 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _init();
+  }
+
+  void _checkLocationAndRefresh(LatLng newLocation) {
+    if (_lastRefreshLocation == null) {
+      _lastRefreshLocation = newLocation;
+      return;
+    }
+
+    const Distance distance = Distance();
+    final double meters = distance(_lastRefreshLocation!, newLocation);
+
+    if (meters >= _refreshDistanceThreshold) {
+      _lastRefreshLocation = newLocation;
+      _refreshParkingData();
+    }
   }
 
   Future<void> _init() async {
@@ -79,9 +98,13 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   void _startAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(_refreshInterval, (_) async {
-      if (!_isRefreshing) {
-        await _refreshParkingData();
-      }
+      if (!_isRefreshing) await _refreshParkingData();
+    });
+
+    _locationStreamSubscription?.cancel();
+    _locationStreamSubscription = _localfunctions.getLocationStream().listen((newLoc) {
+      if (mounted) setState(() => userLocation = newLoc);
+      _checkLocationAndRefresh(newLoc);
     });
   }
 
@@ -112,11 +135,13 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Veriler güncellenemedi',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white
-            ),),
+            content: Text(
+              'Veriler güncellenemedi',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -133,20 +158,22 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   Future<void> _manualRefresh() async {
     await _refreshParkingData();
     if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Güncel veriler getirilmiştir.',
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Güncel veriler getirilmiştir.',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white
-            ),),
-            backgroundColor: SettingsPage.primaryColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
           ),
-        );
+          backgroundColor: SettingsPage.primaryColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     }
   }
 
@@ -156,12 +183,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
       _startAutoRefresh();
       _refreshParkingData();
     } else if (state == AppLifecycleState.paused) {
+      _locationStreamSubscription?.cancel();
     }
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _locationStreamSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -280,12 +309,8 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        _mapController.move(userLocation!, 15),
-                    icon: Icon(
-                      Icons.my_location,
-                      color: colorScheme.onPrimary,
-                    ),
+                    onPressed: () => _mapController.move(userLocation!, 15),
+                    icon: Icon(Icons.my_location, color: colorScheme.onPrimary),
                     label: Text(
                       "Beni Bul",
                       style: textTheme.labelLarge?.copyWith(
@@ -310,10 +335,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                       });
                       _mapController.move(userLocation!, 15);
                     },
-                    icon: Icon(
-                      Icons.list,
-                      color: colorScheme.onPrimary,
-                    ),
+                    icon: Icon(Icons.list, color: colorScheme.onPrimary),
                     label: Text(
                       "Tam Harita",
                       style: textTheme.labelLarge?.copyWith(
@@ -332,8 +354,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      final results =
-                          _localfunctions.getTop5NearestParkings(
+                      final results = _localfunctions.getTop5NearestParkings(
                         userLocation!,
                         parkings,
                         radius.toDouble(),
@@ -351,10 +372,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                         );
                       }
                     },
-                    icon: Icon(
-                      Icons.near_me,
-                      color: colorScheme.onPrimary,
-                    ),
+                    icon: Icon(Icons.near_me, color: colorScheme.onPrimary),
                     label: Text(
                       "En Yakın",
                       style: textTheme.labelLarge?.copyWith(
@@ -393,8 +411,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                         max: 5000,
                         divisions: 24,
                         activeColor: colorScheme.onPrimary,
-                        inactiveColor:
-                            colorScheme.primary.withOpacity(0.15),
+                        inactiveColor: colorScheme.primary.withOpacity(0.15),
                         onChanged: (value) {
                           setState(() {
                             radius = value.toInt();

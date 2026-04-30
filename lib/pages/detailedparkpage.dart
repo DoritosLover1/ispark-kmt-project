@@ -290,7 +290,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       setState(() => _plateError = 'Plaka boş olamaz');
       return;
     }
-    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$')
+    if (!RegExp(r'^(0[1-9]|[1-7][0-9]|8[01])[A-Z]{1,3}\d{2,4}$')
         .hasMatch(plate)) {
       setState(() => _plateError = 'Geçerli bir plaka girin (ör: 34ABC1234)');
       return;
@@ -313,14 +313,14 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     setState(() => _phoneError = null);
   }
 
-    void _validatePlateSecondary() {
+  void _validatePlateSecondary() {
     final plate = _plateControllerSecond.text.trim().toUpperCase();
 
     if (plate.isEmpty) {
       setState(() => _plateSecondaryError = 'Plaka boş olamaz');
       return;
     }
-    if (!RegExp(r'^[A-Z]{2}\d{4}[A-Z]{2}$|^[A-Z]\d{4}[A-Z]{3}$')
+    if (!RegExp(r'^(0[1-9]|[1-7][0-9]|8[01])[A-Z]{1,3}\d{2,4}$')
         .hasMatch(plate)) {
       setState(() => _plateSecondaryError = 'Geçerli bir plaka girin (ör: 34ABC1234)');
       return;
@@ -414,9 +414,9 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Bu kodu otoparka girişte söyleyiniz.',
+                'Otoparka randevu oluşturma anından itibaren 30 dakika içinde gitmeniz ve bu kodu otoparka girişte söylemeniz gerekmetedir.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -511,7 +511,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     _validatePhoneSecondary();
     _validateOTP();
 
-    if (_plateError != null || _phoneError != null) return;
+    if (_plateSecondaryError != null || _phoneSecondaryError != null) return;
 
     setState(() => _isCancelingResevation = true);
 
@@ -538,7 +538,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
           : Map<String, dynamic>.from(resRaw);
 
       if (resData['success'] != true) {
-        throw Exception(resData['error'] ?? 'Rezervasyon oluşturulamadı');
+        throw Exception(resData['error'] ?? 'Rezervasyon ya hiç oluşmamış ya da çoktan silinmiş.');
       }
 
       if (mounted) {
@@ -583,7 +583,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isCreatingReservation = false);
+        setState(() => _isCancelingResevation = false);
       }
     }
   }
@@ -861,7 +861,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                                     AlwaysStoppedAnimation(Colors.white),
                               ),
                             )
-                          : const Icon(Icons.calendar_today),
+                          : const Icon(Icons.calendar_today, color: Colors.white),
                       label: Text(
                         _isCreatingReservation
                             ? 'Oluşturuluyor...'
@@ -999,7 +999,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                                     AlwaysStoppedAnimation(Colors.white),
                               ),
                             )
-                          : const Icon(Icons.calendar_today),
+                          : const Icon(Icons.calendar_today, color: Colors.white),
                       label: Text(
                         _isCancelingResevation
                             ? 'İptal Ediliyor..'
