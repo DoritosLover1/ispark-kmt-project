@@ -194,8 +194,8 @@ class Localfunctions {
       double distB = calculateDistance(
           userLocation.latitude, userLocation.longitude, b.lat, b.lng);
 
-      double ratioA = a.capacity == 0 ? 0 : a.empty / a.capacity;
-      double ratioB = b.capacity == 0 ? 0 : b.empty / b.capacity;
+      double ratioA = a.capacity == 0 ? 0 : a.empty_capacity / a.capacity;
+      double ratioB = b.capacity == 0 ? 0 : b.empty_capacity / b.capacity;
 
       double scoreA = distA - (ratioA * 1000);
       double scoreB = distB - (ratioB * 1000);
