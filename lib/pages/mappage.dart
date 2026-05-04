@@ -242,6 +242,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                     displayedParkings,
                     (_) {},
                     context,
+                    () => _refreshParkingData(),
                   ),
                 ),
 

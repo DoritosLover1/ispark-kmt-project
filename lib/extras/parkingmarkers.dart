@@ -9,6 +9,7 @@ class ParkingMarkers {
     List<dynamic> items,
     void Function(dynamic p) onTap,
     BuildContext context,
+    VoidCallback? onReservationChanged
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -53,6 +54,7 @@ class ParkingMarkers {
                     "freeTime": p.free_time,
                     "isOpen": p.is_open,
                   },
+                  onReservationChanged: onReservationChanged,
                 ),
               ),
             );

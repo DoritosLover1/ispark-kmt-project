@@ -30,7 +30,7 @@ class Favorite {
   factory Favorite.fromJson(Map<String, dynamic> json) {
     return Favorite(
       id: (json['id'] as num).toInt(), 
-      parkID: (json['parkID'] as num).toInt(), 
+      parkID: (json['parkID'] as num).toInt(),
       parkName: json['parkName'] as String, 
       district: json['district'] as String, 
       parkType: json['parkType'] as String, 

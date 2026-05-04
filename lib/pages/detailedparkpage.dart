@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,8 +16,9 @@ import 'package:url_launcher/url_launcher.dart';
 class DetailedParkPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> park;
   final String keyAPI = dotenv.env['MAPTILER_MAPS_API_KEY'] ?? '';
+  final VoidCallback? onReservationChanged;
 
-  DetailedParkPage({super.key, required this.park});
+  DetailedParkPage({super.key, required this.park, this.onReservationChanged});
 
   @override
   ConsumerState<DetailedParkPage> createState() => _DetailedParkPageState();
@@ -27,6 +29,9 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
 
   bool _isFavorite = false;
   bool _isFavoriteBusy = false;
+
+  Timer? _parkRefreshTimer;
+  Map<String, dynamic> _currentParkInformations = {};
 
   late TextEditingController _plateController;
   late TextEditingController _phoneController;
@@ -40,6 +45,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
   String? _plateSecondaryError;
   String? _phoneSecondaryError;
   String? _otpError;
+
   bool _isCreatingReservation = false;
   bool _isCancelingResevation = false;
 
@@ -52,19 +58,22 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     _phoneControllerSecond = TextEditingController();
     _otpController = TextEditingController();
     _checkIfFavorite();
+
+    _currentParkInformations = Map<String, dynamic>.from(_currentParkInformations);
   }
 
   @override
   void dispose() {
     _plateController.dispose();
     _phoneController.dispose();
+    _parkRefreshTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _checkIfFavorite() async {
     try {
       final db = await DBInstance.getInstance();
-      final parkID = widget.park["parkID"];
+      final parkID = _currentParkInformations["parkID"];
       final favorite = await db.favoritesDao.findFavorite(parkID);
 
       if (mounted) {
@@ -76,14 +85,50 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     }
   }
 
+  void _startParkRefresh() {
+  _parkRefreshTimer?.cancel();
+  _parkRefreshTimer = Timer.periodic(
+    const Duration(seconds: 30),
+    (_) async {
+      try {
+        final supabase = Supabase.instance.client;
+        final res = await supabase.functions.invoke(
+          'ispark-otopark-listesi-retrieve',
+        );
+
+        final resRaw = res.data;
+        final Map<String, dynamic> resData = resRaw is String
+            ? jsonDecode(resRaw)
+            : Map<String, dynamic>.from(resRaw);
+
+        if (resData['success'] == true) {
+          final List allParks = resData['data'];
+          final parkID = _currentParkInformations["parkID"];
+
+          final updated = allParks.firstWhere(
+            (p) => p["parkID"] == parkID,
+            orElse: () => null,
+          );
+
+          if (updated != null && mounted) {
+            setState(() => _currentParkInformations = Map<String, dynamic>.from(updated));
+          }
+        }
+      } catch (e) {
+      }
+    },
+  );
+}
+
+
   void _toggleFavorite() async {
     if (_isFavoriteBusy) return;
 
     setState(() => _isFavoriteBusy = true);
 
     final newState = !_isFavorite;
-    final parkID = widget.park["parkID"];
-    final parkName = widget.park["parkName"] ?? "Otopark";
+    final parkID = _currentParkInformations["parkID"];
+    final parkName = _currentParkInformations["parkName"] ?? "Otopark";
 
     try {
       if (newState) {
@@ -91,13 +136,13 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
           id: DateTime.now().millisecondsSinceEpoch,
           parkID: parkID,
           parkName: parkName,
-          district: widget.park["district"] ?? "",
-          parkType: widget.park["parkType"] ?? "",
-          workHours: widget.park["workHours"] ?? "",
-          capacity: int.tryParse(widget.park["capacity"].toString()) ?? 0,
-          freeTime: int.tryParse(widget.park["freeTime"].toString()) ?? 0,
-          lat: widget.park['lat'],
-          lng: widget.park['lng'],
+          district: _currentParkInformations["district"] ?? "",
+          parkType: _currentParkInformations["parkType"] ?? "",
+          workHours: _currentParkInformations["workHours"] ?? "",
+          capacity: int.tryParse(_currentParkInformations["capacity"].toString()) ?? 0,
+          freeTime: int.tryParse(_currentParkInformations["freeTime"].toString()) ?? 0,
+          lat: _currentParkInformations['lat'],
+          lng: _currentParkInformations['lng'],
         );
 
         await ref.read(favoriteParksProvider.notifier).addFavorite(favorite);
@@ -188,8 +233,8 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
   }
 
   void _openMapViewer(BuildContext context) {
-    final double lat = double.tryParse(widget.park["lat"].toString()) ?? 0;
-    final double lng = double.tryParse(widget.park["lng"].toString()) ?? 0;
+    final double lat = double.tryParse(_currentParkInformations["lat"].toString()) ?? 0;
+    final double lng = double.tryParse(_currentParkInformations["lng"].toString()) ?? 0;
 
     if (lat == 0 || lng == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -368,7 +413,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     try {
       final plate = _plateController.text.trim().toUpperCase();
       final phone = _phoneController.text.trim();
-      final parkID = widget.park["parkID"] ?? 0;
+      final parkID = _currentParkInformations["parkID"] ?? 0;
       final supabase = Supabase.instance.client;
 
       final otpRes = await supabase.functions.invoke(
@@ -479,6 +524,8 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
         );
         _plateController.clear();
         _phoneController.clear();
+        _startParkRefresh();
+        widget.onReservationChanged?.call();
       }
     } catch (e) {
       if (mounted) {
@@ -519,7 +566,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       final plate = _plateControllerSecond.text.trim().toUpperCase();
       final phone = _phoneControllerSecond.text.trim();
       final givenOTP = _otpController.text.trim();
-      final parkID = widget.park["parkID"] ?? 0;
+      final parkID = _currentParkInformations["parkID"] ?? 0;
       final supabase = Supabase.instance.client;
 
       final resRes = await supabase.functions.invoke(
@@ -561,6 +608,9 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
         _plateControllerSecond.clear();
         _phoneControllerSecond.clear();
         _otpController.clear();
+
+        _startParkRefresh();
+        widget.onReservationChanged?.call();
       }
     } catch (e) {
       if (mounted) {
@@ -595,7 +645,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
-    final park = widget.park;
+    final park = _currentParkInformations;
     final parkLoc = LatLng(park["lat"], park["lng"]);
 
     final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
