@@ -13,7 +13,7 @@
 - 📍 **Canlı Harita Entegrasyonu:** Flutter Map ve MapTiler kullanarak hibrit harita üzerinde tüm İSpark noktalarını görüntüleyin.
 - 🔍 **Akıllı Filtreleme:** Bulunduğunuz konuma en yakın otoparkları özel bir yarıçap (radius) sürgüsü ile filtreleyin.
 - ⭐ **Favoriler Sistemi:** Sık kullandığınız otoparkları favorilerinize ekleyerek hızlıca erişin (Floor & Supabase senkronizasyonu).
-- 🕒 **Gerçek Zamanlı Veri:** 5 dakikada bir otomatik yenilenen otopark doluluk ve konum bilgileri.
+- 🕒 **Gerçek Zamanlı Veri:** 15 dakikada bir otomatik yenilenen otopark doluluk ve konum bilgileri.
 - 🌓 **Tema Desteği:** Kullanıcı tercihlerine göre dinamik Tema yönetimi.
 - 📱 **Detaylı Bilgi Sayfası:** Otopark kapasitesi, çalışma saatleri ve yol tarifi gibi detaylara anında erişim.
 
