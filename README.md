@@ -100,3 +100,82 @@ https://github.com/user-attachments/assets/a6f00dcd-6c23-48a8-b66f-7268de01ab1b
 3. Değişikliklerinizi commit'leyin (`git commit -m 'Eklendi: Yeni Özellik'`).
 4. Dalınızı push'layın (`git push origin feature/YeniOzellik`).
 5. Bir Pull Request açın.
+
+
+-------------------------------------------------------------------------------------
+
+
+# 🚗 ISpark Project - Smart Parking Guide
+
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
+
+ISpark Project is a modern mobile application that allows users to easily find ISPark parking locations in Istanbul, explore detailed information, and save their favorite spots.
+
+The app is also designed to support parking reservations; however,  
+⚠️ **CURRENTLY ONLY LOCATION VIEWING AND FAVORITES FEATURES ARE AVAILABLE**
+
+> ⚠️ This project is in a simulation state. For real-world usage, you must integrate your own database and API connections.
+
+---
+
+## ✨ Features
+
+- 📍 **Live Map Integration**  
+  View all ISPark locations on a hybrid map using Flutter Map and MapTiler.
+
+- 🔍 **Smart Filtering**  
+  Find nearby parking spots using a customizable radius slider.
+
+- ⭐ **Favorites System**  
+  Save frequently used parking locations for quick access (Floor & Supabase sync).
+
+- 🕒 **Real-Time Data**  
+  Parking data refreshes automatically every 15 minutes.
+
+- 🌓 **Theme Support**  
+  Dynamic theme switching based on user preferences.
+
+- 📱 **Detailed Info Page**  
+  View capacity, working hours, and navigation details.
+
+---
+
+## 🛠️ Tech Stack
+
+### Core
+
+- **Framework:** Flutter  
+- **Backend:** Supabase  
+- **Local DB:** Floor (SQLite)
+
+### Libraries
+
+- Map: `flutter_map`, `latlong2`  
+- Location: `geolocator`, `permission_handler`  
+- State Management: `flutter_riverpod`, `provider`  
+- UI: `google_fonts`, `webview_flutter`  
+- Env Config: `flutter_dotenv`
+
+---
+
+## 🎨 Screenshots
+
+| Welcom | Map | Favorites | Settings |
+| :---: | :---: | :---: | :---: |
+| ![Welcome](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/welcome.jpg) | ![Map](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/map.jpg) | ![Favorites](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/favorites.jpg) | ![Settings](https://raw.githubusercontent.com/DoritosLover1/ispark-kmt-project/db_init/screenshots/settings.jpg) |
+
+### 📽️ Video
+
+https://github.com/user-attachments/assets/a6f00dcd-6c23-48a8-b66f-7268de01ab1b
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repo
+
+```bash
+git clone https://github.com/kullaniciadi/ispark_project.git
+cd ispark_project
