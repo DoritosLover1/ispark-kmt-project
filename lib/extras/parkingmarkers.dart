@@ -9,6 +9,7 @@ class ParkingMarkers {
     List<dynamic> items,
     void Function(dynamic p) onTap,
     BuildContext context,
+    VoidCallback? onReservationChanged
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -17,7 +18,7 @@ class ParkingMarkers {
     final scale = (screenWidth / 375.0).clamp(0.85, 1.3);
 
     return items.map((p) {
-      final ratio = p.capacity == 0 ? 0 : p.empty / p.capacity;
+      final ratio = p.capacity == 0 ? 0 : p.empty_capacity / p.capacity;
 
       Color accent;
       if (ratio > 0.5) {
@@ -41,18 +42,19 @@ class ParkingMarkers {
               MaterialPageRoute(
                 builder: (_) => DetailedParkPage(
                   park: {
-                    "parkID": p.parkID,
-                    "parkName": p.name,
+                    "parkID": p.otopark_id,
+                    "parkName": p.otopark_adi,
                     "capacity": p.capacity,
-                    "emptyCapacity": p.empty,
+                    "emptyCapacity": p.empty_capacity,
                     "lat": p.lat,
                     "lng": p.lng,
                     "district": p.district,
-                    "parkType": p.parkType,
-                    "workHours": p.workHours,
-                    "freeTime": p.freeTime,
-                    "isOpen": p.isOpen,
+                    "parkType": p.park_type,
+                    "workHours": p.work_hours,
+                    "freeTime": p.free_time,
+                    "isOpen": p.is_open,
                   },
+                  onReservationChanged: onReservationChanged,
                 ),
               ),
             );
@@ -95,7 +97,7 @@ class ParkingMarkers {
                     SizedBox(width: 8 * scale),
                     Flexible(
                       child: Text(
-                        p.name,
+                        p.otopark_adi,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelMedium?.copyWith(
@@ -140,7 +142,7 @@ class ParkingMarkers {
  
     // Kapasite hesapla
     final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
-    final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
+    final int empty = int.tryParse(park["empty_capacity"].toString()) ?? 0;
     final double ratio = capacity == 0 ? 0 : empty / capacity;
  
     // Renk belirle
@@ -197,7 +199,7 @@ class ParkingMarkers {
                 SizedBox(width: 8 * scale),
                 Flexible(
                   child: Text(
-                    park["parkName"] ?? "Otopark",
+                    park["otopark_adi"] ?? "Otopark",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelMedium?.copyWith(

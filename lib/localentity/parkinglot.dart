@@ -1,42 +1,42 @@
 class ParkingLot {
-  final String name;
+  final String otopark_adi;
   final double lat;
   final double lng;
   final int capacity;
-  final int empty;
-  final int freeTime;
-  final String parkType;
-  final int isOpen;
-  final String workHours;
+  final int empty_capacity;
+  final int free_time;
+  final String park_type;
+  final int is_open;
+  final String work_hours;
   final String district;
-  final int parkID;
+  final int otopark_id;
 
   ParkingLot({
-    required this.name,
+    required this.otopark_adi,
     required this.lat,
     required this.lng,
     required this.capacity,
-    required this.empty,
-    required this.freeTime,
-    required this.parkType,
-    required this.isOpen,
-    required this.workHours,
+    required this.empty_capacity,
+    required this.free_time,
+    required this.park_type,
+    required this.is_open,
+    required this.work_hours,
     required this.district,
-    required this.parkID,
+    required this.otopark_id,
   });
 
   factory ParkingLot.fromJson(Map<String, dynamic> e) {
     return ParkingLot(
-      parkID: e["parkID"] ?? 0,
-      name: e["parkName"] ?? "Bilinmiyor",
+      otopark_id: e["otopark_id"] ?? 0,
+      otopark_adi: e["otopark_adi"] ?? "Bilinmiyor",
       lat: double.tryParse(e["lat"].toString()) ?? 0,
       lng: double.tryParse(e["lng"].toString()) ?? 0,
       capacity: e["capacity"] ?? 0,
-      empty: e["emptyCapacity"] ?? 0,
-      freeTime: e["freeTime"] ?? 0,
-      parkType: e["parkType"] ?? "-",
-      isOpen: e["isOpen"] ?? 0,
-      workHours: e["workHours"] ?? "-",
+      empty_capacity: e["empty_capacity"] ?? 0,
+      free_time: e["free_time"] ?? 0,
+      park_type: e["park_type"] ?? "-",
+      is_open: e["is_open"] ?? 0,
+      work_hours: e["work_hours"] ?? "-",
       district: e["district"] ?? "-",
     );
   }
