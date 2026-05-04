@@ -4,7 +4,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
 
-İspark Project, İstanbul'daki İŞPARK otoparklarını kolayca bulmanızı, detaylarını incelemenizi ve favorilerinize eklemenizi sağlayan, modern teknolojilerle geliştirilmiş profesyonel bir mobil uygulamadır. Aynı zamanda sizlere otoparklarda rezervasyon yapmanızı sağlamak için geliştirilmiş olup **ŞUANLIK SADECE KONUM VE FAVORİLERE EKLEME ÖZELLİĞİ BULUNMAKTADIR**.
+İspark Project, İstanbul'daki İŞPARK otoparklarını kolayca bulmanızı, detaylarını incelemenizi ve favorilerinize eklemenizi sağlayan, modern teknolojilerle geliştirilmiş profesyonel bir mobil uygulamadır. Aynı zamanda sizlere otoparklarda rezervasyon yapmanızı sağlamak için geliştirilmiş olup **ŞUANLIK SADECE KONUM VE FAVORİLERE EKLEME ÖZELLİĞİ BULUNMAKTADIR**. (UYGULAMA SİMÜLASYON DURUMUNDADIR GERÇEK KULLANIM İÇİN KENDİ VERİ TABANI VE API BAĞLANTILARINI YAPMANIZ GEREKLİDİR)
 
 ---
 
