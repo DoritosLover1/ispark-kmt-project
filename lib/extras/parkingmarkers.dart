@@ -19,14 +19,18 @@ class ParkingMarkers {
 
     return items.map((p) {
       final ratio = p.capacity == 0 ? 0 : p.empty_capacity / p.capacity;
-
+      
       Color accent;
-      if (ratio > 0.5) {
-        accent = Colors.green;
-      } else if (ratio > 0.2) {
-        accent = Colors.orange;
+      if(p.is_open == 1) {
+        if (ratio > 0.5) {
+          accent = Colors.green;
+        } else if (ratio > 0.2) {
+          accent = Colors.orange;
+        } else {
+          accent = Colors.red;
+        }
       } else {
-        accent = Colors.red;
+        accent =  Colors.grey;
       }
 
       return Marker(
@@ -68,7 +72,7 @@ class ParkingMarkers {
                   vertical: 8 * scale,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.surface.withOpacity(0.95),
+                  color: p.is_open == 1 ? colorScheme.surface.withOpacity(0.95) : Colors.grey.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(30 * scale),
                   boxShadow: [
                     BoxShadow(
@@ -139,17 +143,22 @@ class ParkingMarkers {
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 375.0).clamp(0.85, 1.3);
 
+    final int isOpen = park["isOpen"];
     final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
     final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
     final double ratio = capacity == 0 ? 0 : empty / capacity;
 
     Color accent;
-    if (ratio > 0.5) {
-      accent = Colors.green;
-    } else if (ratio > 0.2) {
-      accent = Colors.orange;
+    if(isOpen == 1) {
+      if (ratio > 0.5) {
+        accent = Colors.green;
+      } else if (ratio > 0.2) {
+        accent = Colors.orange;
+      } else {
+        accent = Colors.red;
+      }
     } else {
-      accent = Colors.red;
+      accent =  Colors.grey;
     }
 
     final double lat = double.tryParse(park["lat"].toString()) ?? 0;
@@ -168,7 +177,7 @@ class ParkingMarkers {
               vertical: 8 * scale,
             ),
             decoration: BoxDecoration(
-              color: colorScheme.surface.withOpacity(0.95),
+              color: isOpen == 1 ? colorScheme.surface.withOpacity(0.95) : Colors.grey.withOpacity(0.95),
               borderRadius: BorderRadius.circular(30 * scale),
               boxShadow: [
                 BoxShadow(
