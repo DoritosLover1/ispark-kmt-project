@@ -35,10 +35,8 @@ class ParkingMarkers {
         point: LatLng(p.lat, p.lng),
 
         child: GestureDetector(
-          onTap: () {
-            onTap(p);
-
-            Navigator.of(context).push(
+          onTap: () async {
+            await Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => DetailedParkPage(
                   park: {
@@ -58,6 +56,7 @@ class ParkingMarkers {
                 ),
               ),
             );
+            onTap(p);
           },
 
           child: Column(
@@ -136,16 +135,14 @@ class ParkingMarkers {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
- 
+
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 375.0).clamp(0.85, 1.3);
- 
-    // Kapasite hesapla
+
     final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
-    final int empty = int.tryParse(park["empty_capacity"].toString()) ?? 0;
+    final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
     final double ratio = capacity == 0 ? 0 : empty / capacity;
- 
-    // Renk belirle
+
     Color accent;
     if (ratio > 0.5) {
       accent = Colors.green;
@@ -154,10 +151,10 @@ class ParkingMarkers {
     } else {
       accent = Colors.red;
     }
- 
+
     final double lat = double.tryParse(park["lat"].toString()) ?? 0;
     final double lng = double.tryParse(park["lng"].toString()) ?? 0;
- 
+
     return Marker(
       width: 170 * scale,
       height: 75 * scale,
@@ -199,7 +196,7 @@ class ParkingMarkers {
                 SizedBox(width: 8 * scale),
                 Flexible(
                   child: Text(
-                    park["otopark_adi"] ?? "Otopark",
+                    park["parkName"] ?? "Otopark",
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelMedium?.copyWith(

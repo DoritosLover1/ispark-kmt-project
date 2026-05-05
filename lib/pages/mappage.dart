@@ -38,7 +38,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
   Timer? _refreshTimer;
   StreamSubscription<LatLng>? _locationStreamSubscription;
-  static const Duration _refreshInterval = Duration(minutes: 5);
+  static const Duration _refreshInterval = Duration(minutes: 10);
   bool _isRefreshing = false;
 
   @override
@@ -236,15 +236,15 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   ],
                 ),
 
-              if (displayedParkings.isNotEmpty)
-                MarkerLayer(
+            if (displayedParkings.isNotEmpty)
+              MarkerLayer(
                   markers: ParkingMarkers.getParkingMarkers(
                     displayedParkings,
-                    (_) {},
+                    (p) => _refreshParkingData(),
                     context,
                     () => _refreshParkingData(),
-                  ),
                 ),
+              ),
 
               MarkerLayer(
                 markers: [
