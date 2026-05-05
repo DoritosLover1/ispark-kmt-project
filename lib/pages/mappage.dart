@@ -33,6 +33,8 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   bool isLoading = true;
   int radius = 1000;
 
+  bool hideClosedParks = false;
+
   LatLng? _lastRefreshLocation;
   static const double _refreshDistanceThreshold = 200;
 
@@ -108,6 +110,13 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     });
   }
 
+  List<ParkingLot> _applyFilters(List<ParkingLot> data) {
+    if (hideClosedParks) {
+      return data.where((p) => p.is_open == 1).toList();
+    }
+    return data;
+  }
+
   Future<void> _refreshParkingData() async {
     if (_isRefreshing) return;
 
@@ -121,12 +130,13 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           parkings = data;
 
           if (showAllParks) {
-            displayedParkings = data;
+            displayedParkings = _applyFilters(data);
           } else {
-            displayedParkings = _localfunctions.getTop5NearestParkings(
+            displayedParkings = _applyFilters(_localfunctions.getTop5NearestParkings(
               userLocation!,
               data,
               radius.toDouble(),
+              )
             );
           }
         });
@@ -332,7 +342,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                     onPressed: () {
                       setState(() {
                         showAllParks = true;
-                        displayedParkings = parkings;
+                        displayedParkings = _applyFilters(parkings);
                       });
                       _mapController.move(userLocation!, 15);
                     },
@@ -363,7 +373,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
                       setState(() {
                         showAllParks = false;
-                        displayedParkings = results;
+                        displayedParkings = _applyFilters(results);
                       });
 
                       if (results.isNotEmpty) {
@@ -416,11 +426,10 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                         onChanged: (value) {
                           setState(() {
                             radius = value.toInt();
-                            displayedParkings =
-                                _localfunctions.getTop5NearestParkings(
-                              userLocation!,
-                              parkings,
-                              radius.toDouble(),
+                            displayedParkings = _applyFilters(
+                              _localfunctions.getTop5NearestParkings(
+                                userLocation!, parkings, radius.toDouble(),
+                              ),
                             );
                           });
                         },
@@ -471,6 +480,37 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   : Icon(Icons.refresh, color: colorScheme.onPrimary),
             ),
           ),
+
+          Positioned(
+            top: 100,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: () {
+                setState(() {
+                  hideClosedParks = !hideClosedParks;
+                  displayedParkings = showAllParks
+                      ? _applyFilters(parkings)
+                      : _applyFilters(
+                          _localfunctions.getTop5NearestParkings(
+                            userLocation!, parkings, radius.toDouble(),
+                          ),
+                        );
+                });
+              },
+              tooltip: hideClosedParks ? 'Tümünü göster' : 'Kapalıları gizle',
+              backgroundColor: hideClosedParks
+                  ? colorScheme.primary
+                  : colorScheme.primary,
+              child: Icon(
+                hideClosedParks
+                    ? Icons.visibility_off
+                    : Icons.auto_awesome_motion_rounded,
+                color: hideClosedParks
+                    ? colorScheme.onPrimary
+                    : colorScheme.onPrimary,
+              ),
+            ),
+          )
         ],
       ),
     );

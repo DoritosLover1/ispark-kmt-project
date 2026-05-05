@@ -788,250 +788,260 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
             ),
 
             const SizedBox(height: 20),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: _cardDecoration(primaryColor),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _plateController,
-                    keyboardType: TextInputType.text,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: 'Araç Plakası',
-                      hintText: '34ABC1234',
-                      prefixIcon: const Icon(Icons.directions_car),
-                      errorText: _plateError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (_plateError != null) {
-                        setState(() => _plateError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Telefon Numarası',
-                      hintText: '05XXXXXXXXX',
-                      prefixIcon: const Icon(Icons.phone),
-                      errorText: _phoneError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (_phoneError != null) {
-                        setState(() => _phoneError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          _isCreatingReservation ? null : _createReservation,
-                      icon: _isCreatingReservation
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+            
+            Visibility(
+              visible: isOpen == 1,
+              child: 
+                Column(
+                  children: 
+                  [           
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: _cardDecoration(primaryColor),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _plateController,
+                            keyboardType: TextInputType.text,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              labelText: 'Araç Plakası',
+                              hintText: '34ABC1234',
+                              prefixIcon: const Icon(Icons.directions_car),
+                              errorText: _plateError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : const Icon(Icons.calendar_today, color: Colors.white),
-                      label: Text(
-                        _isCreatingReservation
-                            ? 'Oluşturuluyor...'
-                            : 'Randevu Oluştur',
-                        style: textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 8,
-                        disabledBackgroundColor: primaryColor.withOpacity(0.5),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: _cardDecoration(primaryColor),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _plateControllerSecond,
-                    keyboardType: TextInputType.text,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: 'Araç Plakası',
-                      hintText: '34ABC1234',
-                      prefixIcon: const Icon(Icons.directions_car),
-                      errorText: _plateSecondaryError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (_plateSecondaryError!= null) {
-                        setState(() => _plateSecondaryError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneControllerSecond,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Telefon Numarası',
-                      hintText: '05XXXXXXXXX',
-                      prefixIcon: const Icon(Icons.phone),
-                      errorText: _phoneSecondaryError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (_phoneSecondaryError != null) {
-                        setState(() => _phoneSecondaryError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'OTP Kodu',
-                      hintText: 'XXXXXX (6 haneli sayı)',
-                      prefixIcon: const Icon(Icons.phone),
-                      errorText: _otpError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: primaryColor,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (_otpError != null) {
-                        setState(() => _otpError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          _isCancelingResevation ? null : _cancelReservation,
-                      icon: _isCancelingResevation
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: primaryColor,
+                                  width: 2,
+                                ),
                               ),
-                            )
-                          : const Icon(Icons.calendar_today, color: Colors.white),
-                      label: Text(
-                        _isCancelingResevation
-                            ? 'İptal Ediliyor..'
-                            : 'Randevuyu İptal Et',
-                        style: textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.error,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 8,
-                        disabledBackgroundColor: colorScheme.error.withOpacity(0.5),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (_) {
+                              if (_plateError != null) {
+                                setState(() => _plateError = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'Telefon Numarası',
+                              hintText: '05XXXXXXXXX',
+                              prefixIcon: const Icon(Icons.phone),
+                              errorText: _phoneError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (_) {
+                              if (_phoneError != null) {
+                                setState(() => _phoneError = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  _isCreatingReservation ? null : _createReservation,
+                              icon: _isCreatingReservation
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation(Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(Icons.calendar_today, color: Colors.white),
+                              label: Text(
+                                _isCreatingReservation
+                                    ? 'Oluşturuluyor...'
+                                    : 'Randevu Oluştur',
+                                style: textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 8,
+                                disabledBackgroundColor: primaryColor.withOpacity(0.5),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 20),
+
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: _cardDecoration(primaryColor),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _plateControllerSecond,
+                            keyboardType: TextInputType.text,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              labelText: 'Araç Plakası',
+                              hintText: '34ABC1234',
+                              prefixIcon: const Icon(Icons.directions_car),
+                              errorText: _plateSecondaryError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (_) {
+                              if (_plateSecondaryError!= null) {
+                                setState(() => _plateSecondaryError = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _phoneControllerSecond,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'Telefon Numarası',
+                              hintText: '05XXXXXXXXX',
+                              prefixIcon: const Icon(Icons.phone),
+                              errorText: _phoneSecondaryError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (_) {
+                              if (_phoneSecondaryError != null) {
+                                setState(() => _phoneSecondaryError = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _otpController,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: 'OTP Kodu',
+                              hintText: 'XXXXXX (6 haneli sayı)',
+                              prefixIcon: const Icon(Icons.phone),
+                              errorText: _otpError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                            ),
+                            onChanged: (_) {
+                              if (_otpError != null) {
+                                setState(() => _otpError = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  _isCancelingResevation ? null : _cancelReservation,
+                              icon: _isCancelingResevation
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation(Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(Icons.calendar_today, color: Colors.white),
+                              label: Text(
+                                _isCancelingResevation
+                                    ? 'İptal Ediliyor..'
+                                    : 'Randevuyu İptal Et',
+                                style: textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.error,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 8,
+                                disabledBackgroundColor: colorScheme.error.withOpacity(0.5),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  ],
               ),
-            ),
+            ) 
           ],
         ),
       ),
