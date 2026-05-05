@@ -16,7 +16,7 @@ class IsparkService {
         : Map<String, dynamic>.from(resRaw);
 
     if (resData['success'] != true) {
-      throw Exception(resData['error'] ?? 'Veri çekilemedi');
+      throw Exception('İnternetiniz kapalı olduğundan veriler çekilemedi' ?? 'Veri çekilemedi');
     }
 
     final List data = resData['data'];

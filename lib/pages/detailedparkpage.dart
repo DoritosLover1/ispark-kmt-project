@@ -788,13 +788,55 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
             ),
 
             const SizedBox(height: 20),
-            
+
+            Visibility(
+              visible: isOpen == 0,
+              child:
+                Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: _cardDecoration(colorScheme.error),
+                      child: Column(
+                      children: [
+                          Text(
+                            "Otopark kapalı olduğu için rezervasyon yapılamamaktadır.",
+                            style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.error,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                                        
+                    const SizedBox(height: 20),
+                  ],
+                ), 
+            ),
+
             Visibility(
               visible: isOpen == 1,
               child: 
                 Column(
                   children: 
-                  [           
+                  [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: _cardDecoration(colorScheme.error),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Burada belirli bir fiyatlandırma yoktur. \nFiyatlandırma doluluk oranına ve standart ücret durumuna bağlıdır.",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.error,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),  
+
+                    const SizedBox(height: 16),
+
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: _cardDecoration(primaryColor),
@@ -830,7 +872,9 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                               }
                             },
                           ),
+
                           const SizedBox(height: 16),
+
                           TextField(
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
