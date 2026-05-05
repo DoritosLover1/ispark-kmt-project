@@ -30,7 +30,6 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
   bool _isFavorite = false;
   bool _isFavoriteBusy = false;
 
-  Timer? _parkRefreshTimer;
   Map<String, dynamic> _currentParkInformations = {};
 
   late TextEditingController _plateController;
@@ -59,14 +58,13 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     _otpController = TextEditingController();
     _checkIfFavorite();
 
-    _currentParkInformations = Map<String, dynamic>.from(_currentParkInformations);
+    _currentParkInformations = Map<String, dynamic>.from(widget.park);
   }
 
   @override
   void dispose() {
     _plateController.dispose();
     _phoneController.dispose();
-    _parkRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -84,42 +82,6 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     } catch (e) {
     }
   }
-
-  void _startParkRefresh() {
-  _parkRefreshTimer?.cancel();
-  _parkRefreshTimer = Timer.periodic(
-    const Duration(seconds: 30),
-    (_) async {
-      try {
-        final supabase = Supabase.instance.client;
-        final res = await supabase.functions.invoke(
-          'ispark-otopark-listesi-retrieve',
-        );
-
-        final resRaw = res.data;
-        final Map<String, dynamic> resData = resRaw is String
-            ? jsonDecode(resRaw)
-            : Map<String, dynamic>.from(resRaw);
-
-        if (resData['success'] == true) {
-          final List allParks = resData['data'];
-          final parkID = _currentParkInformations["parkID"];
-
-          final updated = allParks.firstWhere(
-            (p) => p["parkID"] == parkID,
-            orElse: () => null,
-          );
-
-          if (updated != null && mounted) {
-            setState(() => _currentParkInformations = Map<String, dynamic>.from(updated));
-          }
-        }
-      } catch (e) {
-      }
-    },
-  );
-}
-
 
   void _toggleFavorite() async {
     if (_isFavoriteBusy) return;
@@ -524,7 +486,6 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
         );
         _plateController.clear();
         _phoneController.clear();
-        _startParkRefresh();
         widget.onReservationChanged?.call();
       }
     } catch (e) {
@@ -608,8 +569,6 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
         _plateControllerSecond.clear();
         _phoneControllerSecond.clear();
         _otpController.clear();
-
-        _startParkRefresh();
         widget.onReservationChanged?.call();
       }
     } catch (e) {
