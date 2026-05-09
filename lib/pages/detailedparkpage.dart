@@ -762,6 +762,66 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                       ],
                     ),
                   ),
+                  Builder(builder: (context) {
+
+  const double basePrice = 220.0;
+  double finalPrice;
+  String priceLabel;
+  Color priceColor;
+
+  if (occupancy < 40) {
+    finalPrice = basePrice * 0.8;
+    priceLabel = "(%20 indirimli)";
+    priceColor = Colors.green;
+  } else if (occupancy <= 80) {
+    finalPrice = basePrice;
+    priceLabel = "(Standart fiyat)";
+    priceColor = primaryColor;
+  } else {
+    finalPrice = basePrice * 1.2;
+    priceLabel = "(%20 yoğunluk zammı)";
+    priceColor = Colors.orange;
+  }
+
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: _cardDecoration(primaryColor),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Tahmini Ücretlendirme",
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: primaryColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "${finalPrice.toStringAsFixed(0)} ₺/saat",
+              style: textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: priceColor,
+              ),
+            ),
+            Text(
+              priceLabel,
+              style: textTheme.bodySmall?.copyWith(
+                color: priceColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+      ],
+    ),
+  );
+}),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
