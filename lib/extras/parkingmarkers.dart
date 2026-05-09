@@ -55,6 +55,7 @@ class ParkingMarkers {
                     "workHours": p.work_hours,
                     "freeTime": p.free_time,
                     "isOpen": p.is_open,
+                    "isRezervable": p.is_rezervable,
                   },
                   onReservationChanged: onReservationChanged,
                 ),
@@ -110,6 +111,14 @@ class ParkingMarkers {
                         ),
                       ),
                     ),
+                    if (p.is_rezervable == 0 && p.is_open == 1) ...[
+                      SizedBox(width: 4 * scale),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 16 * scale,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -143,7 +152,7 @@ class ParkingMarkers {
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 375.0).clamp(0.85, 1.3);
 
-    final int isOpen = park["isOpen"];
+    final int isOpen = int.tryParse(park["isOpen"].toString()) ?? 0;
     final int capacity = int.tryParse(park["capacity"].toString()) ?? 0;
     final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
     final double ratio = capacity == 0 ? 0 : empty / capacity;
@@ -215,6 +224,14 @@ class ParkingMarkers {
                     ),
                   ),
                 ),
+                if (!((park["isRezervable"] == true || park["isRezervable"] == 1 || park["isRezervable"].toString().toLowerCase() == "true")) && (park["isOpen"] == 1)) ...[
+                  SizedBox(width: 4 * scale),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 16 * scale,
+                  ),
+                ],
               ],
             ),
           ),

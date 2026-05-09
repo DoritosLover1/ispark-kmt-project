@@ -10,6 +10,7 @@ class ParkingLot {
   final String work_hours;
   final String district;
   final int otopark_id;
+  final int is_rezervable;
 
   ParkingLot({
     required this.otopark_adi,
@@ -23,6 +24,7 @@ class ParkingLot {
     required this.work_hours,
     required this.district,
     required this.otopark_id,
+    required this.is_rezervable,
   });
 
   factory ParkingLot.fromJson(Map<String, dynamic> e) {
@@ -38,6 +40,7 @@ class ParkingLot {
       is_open: e["is_open"] ?? 0,
       work_hours: e["work_hours"] ?? "-",
       district: e["district"] ?? "-",
+      is_rezervable: (e["is_rezervable"] == true || e["is_rezervable"] == 1 || e["is_rezervable"].toString().toLowerCase() == "true") ? 1 : 0,
     );
   }
 }

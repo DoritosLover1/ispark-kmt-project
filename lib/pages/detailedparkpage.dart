@@ -611,6 +611,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
     final int empty = int.tryParse(park["emptyCapacity"].toString()) ?? 0;
     final int freeTime = int.tryParse(park["freeTime"].toString()) ?? 0;
     final int isOpen = int.tryParse(park["isOpen"].toString()) ?? 0;
+    final int isRezervable = (park["isRezervable"] == true || park["isRezervable"] == 1 || park["isRezervable"].toString().toLowerCase() == "true") ? 1 : 0;
     final int occupancy =
         capacity == 0 ? 0 : ((capacity - empty) / capacity * 100).toInt();
 
@@ -791,49 +792,131 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
 
             Visibility(
               visible: isOpen == 0,
-              child:
-                Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: _cardDecoration(colorScheme.error),
-                      child: Column(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.error.withOpacity(0.3), width: 1.5),
+                    ),
+                    child: Row(
                       children: [
-                          Text(
+                        Icon(Icons.error_outline, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
                             "Otopark kapalı olduğu için rezervasyon yapılamamaktadır.",
                             style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.error,
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.bold,
                             ),
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                                        
-                    const SizedBox(height: 20),
-                  ],
-                ), 
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
 
             Visibility(
-              visible: isOpen == 1,
-              child: 
-                Column(
-                  children: 
-                  [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: _cardDecoration(colorScheme.error),
-                      child: Column(
-                        children: [
-                          Text(
+              visible: isOpen == 1 && empty == 0,
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.error.withOpacity(0.3), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Otopark tam kapasite doludur. Bu nedenle randevu alınamaz.",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+
+            Visibility(
+              visible: isOpen == 1 && empty > 0 && isRezervable == 0,
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.error.withOpacity(0.3), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Otopark belirli bir doluluk oranına geldiği için belirli süreden sonra açılacaktır.",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+
+            Visibility(
+              visible: isOpen == 1 && empty > 0 && isRezervable == 1,
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.error.withOpacity(0.3), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
                             "Burada belirli bir fiyatlandırma yoktur. \nFiyatlandırma doluluk oranına ve standart ücret durumuna bağlıdır.",
                             style: textTheme.bodyMedium?.copyWith(
                               color: colorScheme.error,
+                              fontWeight: FontWeight.bold,
                             ),
-                          )
+                          ),
+                        )
                         ],
                       ),
-                    ),  
+                    ),
 
                     const SizedBox(height: 16),
 
