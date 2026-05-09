@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ispark_project/database/databaseinstance.dart';
 import 'package:ispark_project/database/entity/favorite.dart';
 
