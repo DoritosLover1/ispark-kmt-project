@@ -34,6 +34,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   int radius = 1000;
 
   bool hideClosedParks = false;
+  bool hideNonReservableParks = false;
 
   LatLng? _lastRefreshLocation;
   static const double _refreshDistanceThreshold = 200;
@@ -111,10 +112,14 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
   }
 
   List<ParkingLot> _applyFilters(List<ParkingLot> data) {
+    List<ParkingLot> filtered = data;
     if (hideClosedParks) {
-      return data.where((p) => p.is_open == 1).toList();
+      filtered = filtered.where((p) => p.is_open == 1).toList();
     }
-    return data;
+    if (hideNonReservableParks) {
+      filtered = filtered.where((p) => p.is_rezervable == 1).toList();
+    }
+    return filtered;
   }
 
   Future<void> _refreshParkingData() async {
@@ -510,7 +515,37 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                     : colorScheme.onPrimary,
               ),
             ),
-          )
+          ),
+          Positioned(
+            top: 150,
+            right: 16,
+            child: FloatingActionButton.small(
+              onPressed: () {
+                setState(() {
+                  hideNonReservableParks = !hideNonReservableParks;
+                  displayedParkings = showAllParks
+                      ? _applyFilters(parkings)
+                      : _applyFilters(
+                          _localfunctions.getTop5NearestParkings(
+                            userLocation!, parkings, radius.toDouble(),
+                          ),
+                        );
+                });
+              },
+              tooltip: hideNonReservableParks ? 'Tümünü göster' : 'Sadece Rezervasyon Yapılabilenler',
+              backgroundColor: hideNonReservableParks
+                  ? colorScheme.primary
+                  : colorScheme.primary,
+              child: Icon(
+                hideNonReservableParks
+                    ? Icons.event_available
+                    : Icons.event_busy,
+                color: hideNonReservableParks
+                    ? colorScheme.onPrimary
+                    : colorScheme.onPrimary,
+              ),
+            ),
+          ),
         ],
       ),
     );
