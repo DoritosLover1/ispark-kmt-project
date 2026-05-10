@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -7,10 +5,8 @@ import 'package:ispark_project/extras/localservices.dart';
 import 'package:ispark_project/extras/locationfunctions.dart';
 import 'package:ispark_project/extras/parkingmarkers.dart';
 import 'package:ispark_project/localentity/parkinglot.dart';
-import 'package:ispark_project/pages/detailedparkpage.dart';
 import 'package:ispark_project/pages/settingspage.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:http/http.dart' as http;
 
 class MapPage extends StatefulWidget {
   final String keyAPI;
@@ -91,9 +87,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         setState(() {
           isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
       }
     }
   }
@@ -105,7 +101,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     });
 
     _locationStreamSubscription?.cancel();
-    _locationStreamSubscription = _localfunctions.getLocationStream().listen((newLoc) {
+    _locationStreamSubscription = _localfunctions.getLocationStream().listen((
+      newLoc,
+    ) {
       if (mounted) setState(() => userLocation = newLoc);
       _checkLocationAndRefresh(newLoc);
     });
@@ -137,11 +135,12 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           if (showAllParks) {
             displayedParkings = _applyFilters(data);
           } else {
-            displayedParkings = _applyFilters(_localfunctions.getTop5NearestParkings(
-              userLocation!,
-              data,
-              radius.toDouble(),
-              )
+            displayedParkings = _applyFilters(
+              _localfunctions.getTop5NearestParkings(
+                userLocation!,
+                data,
+                radius.toDouble(),
+              ),
             );
           }
         });
@@ -153,9 +152,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
             content: Text(
               'Veriler güncellenemedi',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
@@ -178,9 +177,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
           content: Text(
             'Güncel veriler getirilmiştir.',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           backgroundColor: SettingsPage.primaryColor,
           behavior: SnackBarBehavior.floating,
@@ -216,9 +215,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
     final textTheme = Theme.of(context).textTheme;
 
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -226,10 +223,7 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
         children: [
           FlutterMap(
             mapController: _mapController,
-            options: MapOptions(
-              initialCenter: userLocation!,
-              initialZoom: 15,
-            ),
+            options: MapOptions(initialCenter: userLocation!, initialZoom: 15),
             children: [
               TileLayer(
                 urlTemplate:
@@ -251,15 +245,15 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   ],
                 ),
 
-            if (displayedParkings.isNotEmpty)
-              MarkerLayer(
+              if (displayedParkings.isNotEmpty)
+                MarkerLayer(
                   markers: ParkingMarkers.getParkingMarkers(
                     displayedParkings,
                     (p) => _refreshParkingData(),
                     context,
                     () => _refreshParkingData(),
+                  ),
                 ),
-              ),
 
               MarkerLayer(
                 markers: [
@@ -433,7 +427,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                             radius = value.toInt();
                             displayedParkings = _applyFilters(
                               _localfunctions.getTop5NearestParkings(
-                                userLocation!, parkings, radius.toDouble(),
+                                userLocation!,
+                                parkings,
+                                radius.toDouble(),
                               ),
                             );
                           });
@@ -447,7 +443,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                   Container(
                     width: 90,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
@@ -497,7 +495,9 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                       ? _applyFilters(parkings)
                       : _applyFilters(
                           _localfunctions.getTop5NearestParkings(
-                            userLocation!, parkings, radius.toDouble(),
+                            userLocation!,
+                            parkings,
+                            radius.toDouble(),
                           ),
                         );
                 });
@@ -527,12 +527,16 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
                       ? _applyFilters(parkings)
                       : _applyFilters(
                           _localfunctions.getTop5NearestParkings(
-                            userLocation!, parkings, radius.toDouble(),
+                            userLocation!,
+                            parkings,
+                            radius.toDouble(),
                           ),
                         );
                 });
               },
-              tooltip: hideNonReservableParks ? 'Tümünü göster' : 'Sadece Rezervasyon Yapılabilenler',
+              tooltip: hideNonReservableParks
+                  ? 'Tümünü göster'
+                  : 'Sadece Rezervasyon Yapılabilenler',
               backgroundColor: hideNonReservableParks
                   ? colorScheme.primary
                   : colorScheme.primary,

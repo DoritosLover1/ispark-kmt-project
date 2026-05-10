@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:ispark_project/localentity/parkinglot.dart';
 import 'package:ispark_project/pages/detailedparkpage.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -9,7 +8,7 @@ class ParkingMarkers {
     List<dynamic> items,
     void Function(dynamic p) onTap,
     BuildContext context,
-    VoidCallback? onReservationChanged
+    VoidCallback? onReservationChanged,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -19,9 +18,9 @@ class ParkingMarkers {
 
     return items.map((p) {
       final ratio = p.capacity == 0 ? 0 : p.empty_capacity / p.capacity;
-      
+
       Color accent;
-      if(p.is_open == 1) {
+      if (p.is_open == 1) {
         if (ratio > 0.5) {
           accent = Colors.green;
         } else if (ratio > 0.2) {
@@ -30,7 +29,7 @@ class ParkingMarkers {
           accent = Colors.red;
         }
       } else {
-        accent =  Colors.grey;
+        accent = Colors.grey;
       }
 
       return Marker(
@@ -73,7 +72,9 @@ class ParkingMarkers {
                   vertical: 8 * scale,
                 ),
                 decoration: BoxDecoration(
-                  color: p.is_open == 1 ? colorScheme.surface.withOpacity(0.95) : Colors.grey.withOpacity(0.95),
+                  color: p.is_open == 1
+                      ? colorScheme.surface.withOpacity(0.95)
+                      : Colors.grey.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(30 * scale),
                   boxShadow: [
                     BoxShadow(
@@ -82,10 +83,7 @@ class ParkingMarkers {
                       offset: const Offset(0, 6),
                     ),
                   ],
-                  border: Border.all(
-                    color: accent.withOpacity(0.6),
-                    width: 1,
-                  ),
+                  border: Border.all(color: accent.withOpacity(0.6), width: 1),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -158,7 +156,7 @@ class ParkingMarkers {
     final double ratio = capacity == 0 ? 0 : empty / capacity;
 
     Color accent;
-    if(isOpen == 1) {
+    if (isOpen == 1) {
       if (ratio > 0.5) {
         accent = Colors.green;
       } else if (ratio > 0.2) {
@@ -167,7 +165,7 @@ class ParkingMarkers {
         accent = Colors.red;
       }
     } else {
-      accent =  Colors.grey;
+      accent = Colors.grey;
     }
 
     final double lat = double.tryParse(park["lat"].toString()) ?? 0;
@@ -186,7 +184,9 @@ class ParkingMarkers {
               vertical: 8 * scale,
             ),
             decoration: BoxDecoration(
-              color: isOpen == 1 ? colorScheme.surface.withOpacity(0.95) : Colors.grey.withOpacity(0.95),
+              color: isOpen == 1
+                  ? colorScheme.surface.withOpacity(0.95)
+                  : Colors.grey.withOpacity(0.95),
               borderRadius: BorderRadius.circular(30 * scale),
               boxShadow: [
                 BoxShadow(
@@ -195,10 +195,7 @@ class ParkingMarkers {
                   offset: const Offset(0, 6),
                 ),
               ],
-              border: Border.all(
-                color: accent.withOpacity(0.6),
-                width: 1,
-              ),
+              border: Border.all(color: accent.withOpacity(0.6), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -224,7 +221,11 @@ class ParkingMarkers {
                     ),
                   ),
                 ),
-                if (!((park["isRezervable"] == true || park["isRezervable"] == 1 || park["isRezervable"].toString().toLowerCase() == "true")) && (park["isOpen"] == 1)) ...[
+                if (!((park["isRezervable"] == true ||
+                        park["isRezervable"] == 1 ||
+                        park["isRezervable"].toString().toLowerCase() ==
+                            "true")) &&
+                    (park["isOpen"] == 1)) ...[
                   SizedBox(width: 4 * scale),
                   Icon(
                     Icons.warning_amber_rounded,
@@ -243,10 +244,7 @@ class ParkingMarkers {
           Container(
             width: 8 * scale,
             height: 8 * scale,
-            decoration: BoxDecoration(
-              color: accent,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
           ),
         ],
       ),

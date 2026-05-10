@@ -762,66 +762,7 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                       ],
                     ),
                   ),
-                  Builder(builder: (context) {
 
-  const double basePrice = 220.0;
-  double finalPrice;
-  String priceLabel;
-  Color priceColor;
-
-  if (occupancy < 40) {
-    finalPrice = basePrice * 0.8;
-    priceLabel = "(%20 indirimli)";
-    priceColor = Colors.green;
-  } else if (occupancy <= 80) {
-    finalPrice = basePrice;
-    priceLabel = "(Standart fiyat)";
-    priceColor = primaryColor;
-  } else {
-    finalPrice = basePrice * 1.2;
-    priceLabel = "(%20 yoğunluk zammı)";
-    priceColor = Colors.orange;
-  }
-
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    decoration: _cardDecoration(primaryColor),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Tahmini Ücretlendirme",
-          style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: primaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "${finalPrice.toStringAsFixed(0)} ₺/saat",
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: priceColor,
-              ),
-            ),
-            Text(
-              priceLabel,
-              style: textTheme.bodySmall?.copyWith(
-                color: priceColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-      ],
-    ),
-  );
-}),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -953,32 +894,90 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
               visible: isOpen == 1 && empty > 0 && isRezervable == 1,
               child: Column(
                 children: [
+                  Builder(builder: (context) {
+                    const double basePrice = 220.0;
+                    double finalPrice;
+                    String priceLabel;
+                    Color priceColor;
+
+                    if (occupancy < 40) {
+                      finalPrice = basePrice * 0.8;
+                      priceLabel = "(%20 indirimli)";
+                      priceColor = Colors.green;
+                    } else if (occupancy <= 80) {
+                      finalPrice = basePrice;
+                      priceLabel = "(Standart fiyat)";
+                      priceColor = primaryColor;
+                    } else {
+                      finalPrice = basePrice * 1.2;
+                      priceLabel = "(%20 yoğunluk zammı)";
+                      priceColor = Colors.orange;
+                    }
+
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: _cardDecoration(primaryColor),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Tahmini Ücretlendirme",
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "${finalPrice.toStringAsFixed(0)} ₺/saat",
+                                style: textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: priceColor,
+                                ),
+                              ),
+                              Text(
+                                priceLabel,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: priceColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.error.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: colorScheme.error.withOpacity(0.3), width: 1.5),
+                      color: colorScheme.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: colorScheme.error.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: colorScheme.error),
-                        const SizedBox(width: 12),
+                        Icon(Icons.info_outline, color: colorScheme.error, size: 20),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            "Burada belirli bir fiyatlandırma yoktur. \nFiyatlandırma doluluk oranına ve standart ücret durumuna bağlıdır.",
-                            style: textTheme.bodyMedium?.copyWith(
+                            "Burada belirli bir fiyatlandırma yoktur. Fiyatlandırma doluluk oranına ve standart ücret durumuna bağlıdır.",
+                            style: textTheme.bodySmall?.copyWith(
                               color: colorScheme.error,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        )
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
 
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -1227,11 +1226,11 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
                     ),
 
                   ],
+                ),
               ),
-            ) 
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 }

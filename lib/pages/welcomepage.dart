@@ -23,9 +23,7 @@ class _WelcomePageState extends State<WelcomePage> {
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -37,8 +35,8 @@ class _WelcomePageState extends State<WelcomePage> {
                           "İSPARK",
                           style: textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: colorScheme.primary
-                          )
+                            color: colorScheme.primary,
+                          ),
                         ),
 
                         const SizedBox(height: 12),
@@ -90,7 +88,8 @@ class _WelcomePageState extends State<WelcomePage> {
                                 builder: (_) => HomePage(keyAPI: widget.keyAPI),
                               ),
                             );
-                          }, colorScheme: colorScheme,
+                          },
+                          colorScheme: colorScheme,
                         ),
 
                         const SizedBox(height: 20),
@@ -136,9 +135,7 @@ class _FeatureCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.onSurface.withOpacity(0.08),
-        ),
+        border: Border.all(color: colorScheme.onSurface.withOpacity(0.08)),
       ),
       child: Row(
         children: [
@@ -157,17 +154,16 @@ class _FeatureCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.7),
-                      ),
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
               ],
             ),
@@ -198,18 +194,16 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(
-            vertical: size.height * 0.02,
-          ),
+          padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
           backgroundColor: colorScheme.primary,
         ),
         child: Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: size.width * 0.04,
-              ),
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: size.width * 0.04,
+          ),
         ),
       ),
     );
@@ -220,10 +214,7 @@ class _SecondaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
 
-  const _SecondaryButton({
-    required this.text,
-    required this.onTap,
-  });
+  const _SecondaryButton({required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -235,9 +226,9 @@ class _SecondaryButton extends StatelessWidget {
         onPressed: onTap,
         child: Text(
           text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: size.width * 0.038,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontSize: size.width * 0.038),
         ),
       ),
     );

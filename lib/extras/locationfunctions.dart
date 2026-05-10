@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:ispark_project/localentity/parkinglot.dart';
@@ -22,7 +21,8 @@ class Localfunctions {
         return false;
       }
 
-      LocationPermission locationPermission = await Geolocator.checkPermission();
+      LocationPermission locationPermission =
+          await Geolocator.checkPermission();
       if (locationPermission == LocationPermission.denied) {
         locationPermission = await Geolocator.requestPermission();
         if (locationPermission == LocationPermission.denied) {
@@ -156,23 +156,21 @@ class Localfunctions {
     _streamSubscription = null;
   }
 
-  double calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         (cos((lat2 - lat1) * p)) / 2 +
-        cos(lat1 * p) *
-            cos(lat2 * p) *
-            (1 - cos((lon2 - lon1) * p)) /
-            2;
+        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
 
     return 12742000 * asin(min(1.0, sqrt(a)));
   }
 
   List<ParkingLot> getNearbyParkings(
-      LatLng userLocation, List<ParkingLot> parkings, double radius) {
-    if (userLocation == null) return [];
-
+    LatLng userLocation,
+    List<ParkingLot> parkings,
+    double radius,
+  ) {
     return parkings.where((p) {
       final d = calculateDistance(
         userLocation.latitude,
@@ -185,14 +183,25 @@ class Localfunctions {
   }
 
   List<ParkingLot> getTop5NearestParkings(
-      LatLng userLocation, List<ParkingLot> parkings, double radius) {
+    LatLng userLocation,
+    List<ParkingLot> parkings,
+    double radius,
+  ) {
     final candidates = getNearbyParkings(userLocation, parkings, radius);
 
     candidates.sort((a, b) {
       double distA = calculateDistance(
-          userLocation.latitude, userLocation.longitude, a.lat, a.lng);
+        userLocation.latitude,
+        userLocation.longitude,
+        a.lat,
+        a.lng,
+      );
       double distB = calculateDistance(
-          userLocation.latitude, userLocation.longitude, b.lat, b.lng);
+        userLocation.latitude,
+        userLocation.longitude,
+        b.lat,
+        b.lng,
+      );
 
       double ratioA = a.capacity == 0 ? 0 : a.empty_capacity / a.capacity;
       double ratioB = b.capacity == 0 ? 0 : b.empty_capacity / b.capacity;

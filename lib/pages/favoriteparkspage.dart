@@ -18,10 +18,7 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(
-        color: primaryColor,
-        width: 2,
-      ),
+      border: Border.all(color: primaryColor, width: 2),
       boxShadow: [
         BoxShadow(
           color: primaryColor.withOpacity(0.15),
@@ -35,7 +32,9 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
 
   Future<void> _removePark(Favorite park) async {
     try {
-      await ref.read(favoriteParksProvider.notifier).removeFavorite(park.parkID);
+      await ref
+          .read(favoriteParksProvider.notifier)
+          .removeFavorite(park.parkID);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -43,9 +42,9 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
           content: Text(
             '${park.parkName} favorilerden çıkarıldı ✅',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           backgroundColor: primaryColor,
           behavior: SnackBarBehavior.floating,
@@ -61,9 +60,9 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
             content: Text(
               'Otopark silinirken hata oluştu',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
@@ -80,37 +79,33 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
         title: Text(
           'Emin misin?',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
         content: Text(
           '${park.parkName} otoparkını favorilerinden kaldırmak istediğine emin misin?',
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Colors.grey[700],
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.displayMedium?.copyWith(color: Colors.grey[700]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
               foregroundColor: Colors.grey[700],
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             child: Text(
               'İptal',
-              style: Theme.of(context)
-                  .textTheme
-                  .displayMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
@@ -118,8 +113,7 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -128,9 +122,9 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
             child: Text(
               'Sil',
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -204,225 +198,236 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(24),
                       child: Column(
-                        children: List.generate(
-                          favoriteParksList.length,
-                          (index) {
-                            final park = favoriteParksList[index];
-                            final occupancyPercentage = park.capacity == 0
-                                ? '0'
-                                : (((park.capacity - park.freeTime) /
+                        children: List.generate(favoriteParksList.length, (
+                          index,
+                        ) {
+                          final park = favoriteParksList[index];
+                          final occupancyPercentage = park.capacity == 0
+                              ? '0'
+                              : (((park.capacity - park.freeTime) /
                                             park.capacity) *
                                         100)
                                     .toStringAsFixed(0);
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 20),
-                              padding: const EdgeInsets.all(16),
-                              decoration: _blueDecoration(),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.car_rental_rounded,
-                                        color: primaryColor,
-                                        size: 28,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          park.parkName,
-                                          style: theme.textTheme.headlineSmall
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  Row(
-                                    children: [
-                                      Icon(Icons.location_on,
-                                          size: 16,
-                                          color: colorScheme.secondary),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'İlçe: ${park.district}',
-                                        style: TextStyle(
-                                          color: colorScheme.secondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  Row(
-                                    children: [
-                                      Icon(Icons.business,
-                                          size: 14,
-                                          color: colorScheme.secondary),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${park.parkType} • ${park.workHours}',
-                                        style: TextStyle(
-                                          color: colorScheme.secondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: primaryColor.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: primaryColor.withOpacity(0.3),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(16),
+                            decoration: _blueDecoration(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.car_rental_rounded,
+                                      color: primaryColor,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        park.parkName,
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ),
-                                    child: Row(
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: colorScheme.secondary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'İlçe: ${park.district}',
+                                      style: TextStyle(
+                                        color: colorScheme.secondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.business,
+                                      size: 14,
+                                      color: colorScheme.secondary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${park.parkType} • ${park.workHours}',
+                                      style: TextStyle(
+                                        color: colorScheme.secondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: primaryColor.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: primaryColor.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      _statColumn(
+                                        theme,
+                                        colorScheme,
+                                        'Toplam Kapasite',
+                                        '${park.capacity}',
+                                      ),
+                                      _divider(),
+                                      _statColumn(
+                                        theme,
+                                        colorScheme,
+                                        'Boş Yer',
+                                        '${park.freeTime}',
+                                      ),
+                                      _divider(),
+                                      _statColumn(
+                                        theme,
+                                        colorScheme,
+                                        'Doluluk Oranı',
+                                        '$occupancyPercentage%',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceAround,
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        _statColumn(theme, colorScheme,
-                                            'Toplam Kapasite',
-                                            '${park.capacity}'),
-                                        _divider(),
-                                        _statColumn(theme, colorScheme,
-                                            'Boş Yer', '${park.freeTime}'),
-                                        _divider(),
-                                        _statColumn(theme, colorScheme,
-                                            'Doluluk Oranı',
-                                            '$occupancyPercentage%'),
+                                        Text(
+                                          'Doluluk Durumu',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme.secondary,
+                                          ),
+                                        ),
+                                        Text(
+                                          '$occupancyPercentage%',
+                                          style: theme.textTheme.displaySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: primaryColor,
+                                              ),
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'Doluluk Durumu',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: colorScheme.secondary,
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: LinearProgressIndicator(
+                                        value:
+                                            int.parse(occupancyPercentage) /
+                                            100,
+                                        minHeight: 8,
+                                        backgroundColor: primaryColor
+                                            .withOpacity(0.2),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              primaryColor,
                                             ),
-                                          ),
-                                          Text(
-                                            '$occupancyPercentage%',
-                                            style: theme.textTheme.displaySmall
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: primaryColor,
-                                            ),
-                                          ),
-                                        ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        child: LinearProgressIndicator(
-                                          value:
-                                              int.parse(occupancyPercentage) /
-                                                  100,
-                                          minHeight: 8,
-                                          backgroundColor:
-                                              primaryColor.withOpacity(0.2),
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  primaryColor),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
 
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    DetailedParkPage(
-                                                  park: {
-                                                    'parkID': park.parkID,
-                                                    'parkName': park.parkName,
-                                                    'district': park.district,
-                                                    'parkType': park.parkType,
-                                                    'workHours': park.workHours,
-                                                    'capacity': park.capacity,
-                                                    'emptyCapacity':
-                                                        park.freeTime,
-                                                    'freeTime': park.freeTime,
-                                                    'lat': park.lat as double,
-                                                    'lng': park.lng as double,
-                                                    'isOpen': 1,
-                                                  },
-                                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => DetailedParkPage(
+                                                park: {
+                                                  'parkID': park.parkID,
+                                                  'parkName': park.parkName,
+                                                  'district': park.district,
+                                                  'parkType': park.parkType,
+                                                  'workHours': park.workHours,
+                                                  'capacity': park.capacity,
+                                                  'emptyCapacity':
+                                                      park.freeTime,
+                                                  'freeTime': park.freeTime,
+                                                  'lat': park.lat,
+                                                  'lng': park.lng,
+                                                  'isOpen': 1,
+                                                },
                                               ),
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: primaryColor,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 12),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: primaryColor,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
                                           ),
-                                          child: Text(
-                                            'Detaylar',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
+                                        ),
+                                        child: Text(
+                                          'Detaylar',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: primaryColor.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.remove,
-                                            color: Colors.redAccent,
-                                          ),
-                                          onPressed: () =>
-                                              _confirmDelete(park),
-                                        ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.remove,
+                                          color: Colors.redAccent,
+                                        ),
+                                        onPressed: () => _confirmDelete(park),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                       ),
                     ),
             ),
@@ -432,8 +437,12 @@ class _FavoriteParksPageState extends ConsumerState<FavoriteParksPage> {
     );
   }
 
-  Widget _statColumn(ThemeData theme, ColorScheme colorScheme, String label,
-      String value) {
+  Widget _statColumn(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    String label,
+    String value,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
