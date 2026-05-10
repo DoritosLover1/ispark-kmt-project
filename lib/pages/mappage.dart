@@ -82,14 +82,26 @@ class _MapPageState extends State<MapPage> with WidgetsBindingObserver {
 
       _startAutoRefresh();
     } catch (e) {
-      print('Error in _init: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Hata: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Otopark listesi getirilemedi. Lütfen internetinizi kontrol edin.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
       }
     }
   }
