@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ispark_project/global/universaltheme.dart';
 import 'package:ispark_project/pages/favoriteparkspage.dart';
 import 'package:ispark_project/pages/mappage.dart';
+import 'package:ispark_project/pages/reservationspage.dart';
 import 'package:ispark_project/pages/settingspage.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +20,7 @@ class _HomePageState extends State<HomePage> {
     0: GlobalKey<NavigatorState>(),
     1: GlobalKey<NavigatorState>(),
     2: GlobalKey<NavigatorState>(),
+    3: GlobalKey<NavigatorState>(),
   };
 
   @override
@@ -48,6 +50,14 @@ class _HomePageState extends State<HomePage> {
           ),
           Navigator(
             key: _navigatorKeys[2],
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (_) => ReservationsPage(),
+              );
+            },
+          ),
+          Navigator(
+            key: _navigatorKeys[3],
             onGenerateRoute: (settings) {
               return MaterialPageRoute(
                 builder: (_) => SettingsPage(),
@@ -95,6 +105,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border_rounded),
             label: 'Favoriler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_rounded),
+            label: 'Rezervasyonlar',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_accessibility_rounded),

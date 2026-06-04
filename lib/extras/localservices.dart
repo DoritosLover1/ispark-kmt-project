@@ -19,7 +19,9 @@ class IsparkService {
           : Map<String, dynamic>.from(resRaw);
 
       if (resData['success'] != true) {
-        throw Exception('Otopark listesi getirilemedi. Lütfen internetinizi kontrol edin.');
+        throw Exception(
+          'Otopark listesi getirilemedi. Lütfen internetinizi kontrol edin.',
+        );
       }
 
       final List data = resData['data'];
@@ -27,7 +29,9 @@ class IsparkService {
     } on SocketException {
       throw Exception('Bağlantı hatası. Lütfen internetinizi kontrol edin.');
     } on Exception {
-      throw Exception('Otopark listesi getirilemedi. Lütfen internetinizi kontrol edin.');
+      throw Exception(
+        'Otopark listesi getirilemedi. Lütfen internetinizi kontrol edin.',
+      );
     }
   }
 }

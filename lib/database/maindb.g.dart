@@ -74,13 +74,15 @@ class _$AppDataBase extends AppDataBase {
 
   Favoritedao? _favoritesDaoInstance;
 
+  ReservationDao? _reservationDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 6,
+      version: 7,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -97,6 +99,8 @@ class _$AppDataBase extends AppDataBase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `favorites` (`id` INTEGER NOT NULL, `parkID` INTEGER NOT NULL, `parkName` TEXT NOT NULL, `district` TEXT NOT NULL, `parkType` TEXT NOT NULL, `workHours` TEXT NOT NULL, `capacity` INTEGER NOT NULL, `freeTime` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `reservations` (`id` INTEGER NOT NULL, `parkID` INTEGER NOT NULL, `parkName` TEXT NOT NULL, `district` TEXT NOT NULL, `parkType` TEXT NOT NULL, `workHours` TEXT NOT NULL, `capacity` INTEGER NOT NULL, `freeTime` INTEGER NOT NULL, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `plate` TEXT NOT NULL, `phone` TEXT NOT NULL, `date` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -107,6 +111,12 @@ class _$AppDataBase extends AppDataBase {
   @override
   Favoritedao get favoritesDao {
     return _favoritesDaoInstance ??= _$Favoritedao(database, changeListener);
+  }
+
+  @override
+  ReservationDao get reservationDao {
+    return _reservationDaoInstance ??=
+        _$ReservationDao(database, changeListener);
   }
 }
 
@@ -188,5 +198,99 @@ class _$Favoritedao extends Favoritedao {
   Future<void> insertFavorite(Favorite favorite) async {
     await _favoriteInsertionAdapter.insert(
         favorite, OnConflictStrategy.replace);
+  }
+}
+
+class _$ReservationDao extends ReservationDao {
+  _$ReservationDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _reservationInsertionAdapter = InsertionAdapter(
+            database,
+            'reservations',
+            (Reservation item) => <String, Object?>{
+                  'id': item.id,
+                  'parkID': item.parkID,
+                  'parkName': item.parkName,
+                  'district': item.district,
+                  'parkType': item.parkType,
+                  'workHours': item.workHours,
+                  'capacity': item.capacity,
+                  'freeTime': item.freeTime,
+                  'lat': item.lat,
+                  'lng': item.lng,
+                  'plate': item.plate,
+                  'phone': item.phone,
+                  'date': item.date
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<Reservation> _reservationInsertionAdapter;
+
+  @override
+  Future<List<Reservation>> getAllReservations() async {
+    return _queryAdapter.queryList('SELECT * FROM reservations',
+        mapper: (Map<String, Object?> row) => Reservation(
+            id: row['id'] as int,
+            parkID: row['parkID'] as int,
+            parkName: row['parkName'] as String,
+            district: row['district'] as String,
+            parkType: row['parkType'] as String,
+            workHours: row['workHours'] as String,
+            capacity: row['capacity'] as int,
+            freeTime: row['freeTime'] as int,
+            lat: row['lat'] as double,
+            lng: row['lng'] as double,
+            plate: row['plate'] as String,
+            phone: row['phone'] as String,
+            date: row['date'] as String));
+  }
+
+  @override
+  Future<Reservation?> findReservation(int id) async {
+    return _queryAdapter.query('SELECT * FROM reservations WHERE parkID = ?1',
+        mapper: (Map<String, Object?> row) => Reservation(
+            id: row['id'] as int,
+            parkID: row['parkID'] as int,
+            parkName: row['parkName'] as String,
+            district: row['district'] as String,
+            parkType: row['parkType'] as String,
+            workHours: row['workHours'] as String,
+            capacity: row['capacity'] as int,
+            freeTime: row['freeTime'] as int,
+            lat: row['lat'] as double,
+            lng: row['lng'] as double,
+            plate: row['plate'] as String,
+            phone: row['phone'] as String,
+            date: row['date'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteReservation(int id) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM reservations WHERE id = ?1',
+        arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteReservationByParkIDAndPlate(
+    int parkID,
+    String plate,
+  ) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM reservations WHERE parkID = ?1 AND plate = ?2',
+        arguments: [parkID, plate]);
+  }
+
+  @override
+  Future<void> insertReservation(Reservation reservation) async {
+    await _reservationInsertionAdapter.insert(
+        reservation, OnConflictStrategy.replace);
   }
 }

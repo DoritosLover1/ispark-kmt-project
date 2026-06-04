@@ -13,11 +13,8 @@ void main() async {
   final String keyAPI = dotenv.env['MAPTILER_MAPS_API_KEY'] ?? '';
   final String supabaseAPI = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
   final String supabaseURL = dotenv.env['SUPABASE_URL'] ?? '';
-    await Supabase.initialize(
-    url: supabaseURL,
-    anonKey: supabaseAPI,
-  );
-  
+  await Supabase.initialize(url: supabaseURL, anonKey: supabaseAPI);
+
   await DBInstance.getInstance();
 
   runApp(
@@ -25,7 +22,9 @@ void main() async {
       child: provider.MultiProvider(
         providers: [
           provider.ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          provider.ChangeNotifierProvider(create: (context) => BottomTabState()),
+          provider.ChangeNotifierProvider(
+            create: (context) => BottomTabState(),
+          ),
         ],
         child: MyApp(keyAPI: keyAPI),
       ),
@@ -47,9 +46,7 @@ class MyApp extends StatelessWidget {
           theme: themeProvider.themeData,
           debugShowCheckedModeBanner: false,
           initialRoute: '/',
-          routes: {
-            '/': (context) => WelcomePage(keyAPI: keyAPI),
-          },
+          routes: {'/': (context) => WelcomePage(keyAPI: keyAPI)},
         );
       },
     );
