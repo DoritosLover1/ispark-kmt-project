@@ -6,6 +6,34 @@ import 'package:ispark_project/pages/welcomepage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:workmanager/workmanager.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      if (task == 'CheckExpiredReservations') {
+        final db = await DBInstance.getInstance();
+        final reservations = await db.reservationDao.getAllReservations();
+
+        final now = DateTime.now();
+        for (var res in reservations) {
+          try {
+            final resDate = DateTime.parse(res.date);
+            final diff = now.difference(resDate);
+
+            if (diff.inMinutes >= 30) {
+              await db.reservationDao.deleteReservation(res.id);
+            }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      return Future.value(false);
+    }
+    return Future.value(true);
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +44,15 @@ void main() async {
   await Supabase.initialize(url: supabaseURL, anonKey: supabaseAPI);
 
   await DBInstance.getInstance();
+
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+
+  Workmanager().registerPeriodicTask(
+    'ispark-check-expired-reservations',
+    'CheckExpiredReservations',
+    frequency: const Duration(minutes: 15),
+    existingWorkPolicy: ExistingWorkPolicy.replace,
+  );
 
   runApp(
     ProviderScope(

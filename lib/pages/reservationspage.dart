@@ -128,10 +128,9 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
           children: [
             Text(
               '${reservation.parkName} otoparkındaki rezervasyonunuzu iptal etmek için lütfen size verilen 6 haneli OTP kodunu giriniz.',
-              style: Theme.of(context)
-                  .textTheme
-                  .displayMedium
-                  ?.copyWith(color: Colors.grey[700]),
+              style: Theme.of(
+                context,
+              ).textTheme.displayMedium?.copyWith(color: Colors.grey[700]),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -157,16 +156,36 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
             ),
             child: Text(
               'Geri',
-              style: Theme.of(context)
-                  .textTheme
-                  .displayMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
             onPressed: () {
               if (otpController.text.trim().length == 6) {
-                Navigator.pop(context, true);
+                try {
+                  _cancelReservation(reservation, otpController.text.trim());
+                  Navigator.pop(context, false);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Rezervasyon süresi geçmiş olabilir ya da girmiş olduğunuz kod yanlıştır.',
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                      ),
+                      backgroundColor: Colors.redAccent,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -252,8 +271,9 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
         children: [
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(reservationParksProvider.notifier).loadReservations(),
+              onRefresh: () => ref
+                  .read(reservationParksProvider.notifier)
+                  .loadReservations(),
               color: primaryColor,
               child: reservationsList.isEmpty
                   ? Center(
@@ -293,9 +313,12 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
                               index,
                             ) {
                               final reservation = reservationsList[index];
-                              
-                              final dateObj = DateTime.tryParse(reservation.date) ?? DateTime.now();
-                              final dateStr = "${dateObj.day.toString().padLeft(2, '0')}/${dateObj.month.toString().padLeft(2, '0')}/${dateObj.year} ${dateObj.hour.toString().padLeft(2, '0')}:${dateObj.minute.toString().padLeft(2, '0')}";
+
+                              final dateObj =
+                                  DateTime.tryParse(reservation.date) ??
+                                  DateTime.now();
+                              final dateStr =
+                                  "${dateObj.day.toString().padLeft(2, '0')}/${dateObj.month.toString().padLeft(2, '0')}/${dateObj.year} ${dateObj.hour.toString().padLeft(2, '0')}:${dateObj.minute.toString().padLeft(2, '0')}";
 
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 20),
@@ -367,17 +390,21 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
                                       children: [
                                         Expanded(
                                           child: ElevatedButton(
-                                            onPressed: () => _openGoogleMaps(context, reservation.lat, reservation.lng),
+                                            onPressed: () => _openGoogleMaps(
+                                              context,
+                                              reservation.lat,
+                                              reservation.lng,
+                                            ),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: primaryColor,
                                               foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 12,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                  12,
-                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                             ),
                                             child: Text(
@@ -395,17 +422,18 @@ class _ReservationsPageState extends ConsumerState<ReservationsPage> {
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: ElevatedButton(
-                                            onPressed: () => _showCancelDialog(reservation),
+                                            onPressed: () =>
+                                                _showCancelDialog(reservation),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.redAccent,
                                               foregroundColor: Colors.white,
-                                              padding: const EdgeInsets.symmetric(
-                                                vertical: 12,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                  ),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(
-                                                  12,
-                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                             ),
                                             child: Text(

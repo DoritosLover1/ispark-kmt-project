@@ -486,15 +486,21 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
           district: _currentParkInformations["district"] ?? "",
           parkType: _currentParkInformations["parkType"] ?? "",
           workHours: _currentParkInformations["workHours"] ?? "",
-          capacity: int.tryParse(_currentParkInformations["capacity"].toString()) ?? 0,
-          freeTime: int.tryParse(_currentParkInformations["freeTime"].toString()) ?? 0,
+          capacity:
+              int.tryParse(_currentParkInformations["capacity"].toString()) ??
+              0,
+          freeTime:
+              int.tryParse(_currentParkInformations["freeTime"].toString()) ??
+              0,
           lat: double.tryParse(_currentParkInformations['lat'].toString()) ?? 0,
           lng: double.tryParse(_currentParkInformations['lng'].toString()) ?? 0,
           plate: plate,
           phone: phone,
           date: DateTime.now().toIso8601String(),
         );
-        await ref.read(reservationParksProvider.notifier).addReservation(newReservation);
+        await ref
+            .read(reservationParksProvider.notifier)
+            .addReservation(newReservation);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -581,7 +587,9 @@ class _DetailedParkPageState extends ConsumerState<DetailedParkPage> {
       }
 
       if (mounted) {
-        await ref.read(reservationParksProvider.notifier).removeReservation(parkID, plate);
+        await ref
+            .read(reservationParksProvider.notifier)
+            .removeReservation(parkID, plate);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
